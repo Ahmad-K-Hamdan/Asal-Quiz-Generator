@@ -1,10 +1,12 @@
 import os
-from dotenv import load_dotenv
+
 from azure.storage.blob import BlobServiceClient
 from config import COMPONENTS_FOLDER, CONTAINER_NAME
+from dotenv import load_dotenv
 
 load_dotenv()
 STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONN")
+
 
 def export_blob_files():
     print(f"📦 Exporting blobs from container '{CONTAINER_NAME}'...")
@@ -19,6 +21,7 @@ def export_blob_files():
         with open(path, "wb") as f:
             f.write(client.download_blob(blob.name).readall())
         print(f"✅ Downloaded blob: {blob.name} → {path}")
+
 
 def create_blob_container():
     service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)

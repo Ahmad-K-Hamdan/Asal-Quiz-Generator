@@ -1,9 +1,9 @@
 import os
 import zipfile
-import requests
-from dotenv import load_dotenv
 
-from config import ZIP_DIR_PATH, ZIP_FILE_PATH, FUNC_APP_NAME
+import requests
+from config import FUNC_APP_NAME, ZIP_DIR_PATH, ZIP_FILE_PATH
+from dotenv import load_dotenv
 
 load_dotenv()
 USERNAME = os.getenv("PUBLISH_PROFILE_USER")
@@ -36,7 +36,7 @@ def deploy_function_app():
         )
 
     if response.status_code in (200, 202):
-        print(f"✅ Deployment successful.")
+        print("✅ Deployment successful.")
         os.remove(ZIP_FILE_PATH)
         print(f"🗑️ Deleted temporary zip: {ZIP_FILE_PATH}")
     else:

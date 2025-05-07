@@ -1,7 +1,7 @@
 INDEX_NAME = "main-index"
-INDEXER_NAME = 'main-indexer'
-SKILLSET_NAME = 'azureblob-skillset'
-DATASOURCE_NAME = 'quizcontentstorage'
+INDEXER_NAME = "main-indexer"
+SKILLSET_NAME = "azureblob-skillset"
+DATASOURCE_NAME = "quizcontentstorage"
 
 SEARCH_NAME = "searchdocsofmaterial"
 API_VERSION = "2021-04-30-Preview"

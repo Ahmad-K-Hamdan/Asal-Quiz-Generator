@@ -1,7 +1,8 @@
-import os
 import json
+import os
+
 import requests
-from config import COMPONENTS_FOLDER, API_VERSION, SEARCH_NAME, DATASOURCE_NAME
+from config import API_VERSION, COMPONENTS_FOLDER, DATASOURCE_NAME, SEARCH_NAME
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,7 +34,7 @@ def import_datasource():
         print(f"❌ File not found: {path}")
         return
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         body = json.load(f)
 
     url = f"https://{SEARCH_NAME}.search.windows.net/indexes/{DATASOURCE_NAME}?api-version={API_VERSION}"
