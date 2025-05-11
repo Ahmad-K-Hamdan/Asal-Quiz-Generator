@@ -2,19 +2,18 @@ import datetime
 import os
 
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import JWTError, jwt
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-
-# OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int):
     try:
         print(f"Generating token for user_id: {user_id}")
         payload = {
@@ -30,3 +29,17 @@ def create_access_token(user_id: int) -> str:
     except Exception as e:
         print(f"Error during token creation: {e}")
         raise
+
+
+def get_user_id(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        return user_id
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")

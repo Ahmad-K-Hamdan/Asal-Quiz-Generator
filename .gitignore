@@ -6,8 +6,4 @@ venv/
 .vscode/
 .pytest_cache/
 downloaded_blobs/
-<<<<<<< Updated upstream
 temp-components/
-=======
-temp-components/ 
->>>>>>> Stashed changes
