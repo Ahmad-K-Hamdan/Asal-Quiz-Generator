@@ -1,0 +1,53 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  frontend_dir: '$(Build.SourcesDirectory)/frontend'
+  backend_dir: '$(Build.SourcesDirectory)/backend'
+  python.version: '3.x'
+
+steps:
+  # ------------ Python Backend Setup ------------
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      addToPath: true
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    workingDirectory: $(backend_dir)
+    displayName: 'Install Python backend dependencies from requirements.txt'
+
+  - script: |
+      cd $(backend_dir)
+      start /B uvicorn app.main:app 
+    displayName: 'Run Backend Server'
+
+  # ------------ Backend Tests  ------------
+  - script: pytest
+    workingDirectory: $(backend_dir)
+    displayName: 'Run Backend Tests'
+    condition: false
+
+  # ------------ Node Frontend ------------
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.x'
+    displayName: 'Set up Node.js'
+
+  - script: |
+      npm install
+      npm run build
+    workingDirectory: $(frontend_dir)
+    displayName: 'Install and Build Frontend'
+
+  # ------------ Frontend Tests ------------
+  - script: npm run test
+    workingDirectory: $(frontend_dir)
+    displayName: ' Run Frontend Tests'
+    condition: false
