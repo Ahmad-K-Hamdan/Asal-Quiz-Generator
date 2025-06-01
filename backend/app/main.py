@@ -1,6 +1,8 @@
 from app.routers import (
     categories_router,
     documents_router,
+    quiz_attempts_router,
+    quizzes_router,
     users_router,
 )
 from fastapi import FastAPI
@@ -20,3 +22,5 @@ app.add_middleware(
 app.include_router(users_router.router)
 app.include_router(documents_router.router)
 app.include_router(categories_router.router)
+app.include_router(quizzes_router.router)
+app.include_router(quiz_attempts_router.router)

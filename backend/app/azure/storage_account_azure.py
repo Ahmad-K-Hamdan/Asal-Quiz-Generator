@@ -1,4 +1,6 @@
+import json
 import os
+from typing import Any
 from urllib.parse import unquote
 from uuid import uuid4
 
@@ -67,3 +69,32 @@ class AzureBlobStorage:
             raise HTTPException(
                 status_code=500, detail="Failed to delete file from storage."
             )
+
+    def retrieve_blob(self, path: str):
+        try:
+            blob_path_inside_container = unquote("/".join(path.split("/")[-4:]))
+            blob_client = self.container_client.get_blob_client(
+                blob_path_inside_container
+            )
+
+            stream = blob_client.download_blob()
+            content = stream.readall().decode("utf-8")
+            return json.loads(content)
+
+        except Exception as e:
+            print(f"Error retrieving blob '{path}' from Azure:", e)
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve file from storage."
+            )
+
+    def upload_json(self, payload: Any, filename: str):
+        data = json.dumps(payload).encode("utf-8")
+        blob_client = self.container_client.get_blob_client(filename)
+
+        blob_client.upload_blob(
+            data,
+            overwrite=True,
+            content_settings=ContentSettings(content_type="application/json"),
+        )
+
+        return blob_client.url

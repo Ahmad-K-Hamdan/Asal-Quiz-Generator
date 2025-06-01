@@ -1,4 +1,5 @@
-import datetime
+# Updated models/db_models.py
+from datetime import datetime
 
 from app.database.connection_database import Base
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
@@ -12,13 +13,16 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     categories = relationship(
         "Category",
         back_populates="owner",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+    quiz_attempts = relationship(
+        "QuizAttempt", back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -38,6 +42,9 @@ class Category(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    quizzes = relationship(
+        "Quiz", back_populates="category", cascade="all, delete-orphan"
+    )
 
 
 class Document(Base):
@@ -51,3 +58,29 @@ class Document(Base):
     )
 
     category = relationship("Category", back_populates="documents")
+
+
+class Quiz(Base):
+    __tablename__ = "quizzes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    level = Column(String(10), nullable=False)
+    path = Column(String(512), index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    category_id = Column(
+        Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False
+    )
+
+    category = relationship("Category", back_populates="quizzes")
+
+
+class QuizAttempt(Base):
+    __tablename__ = "quiz_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
+    path = Column(String(512), nullable=False)
+
+    user = relationship("User", back_populates="quiz_attempts")
