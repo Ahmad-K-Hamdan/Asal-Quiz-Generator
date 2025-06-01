@@ -5,7 +5,6 @@ from app.schemas.user_schema import (
     LoginResponse,
     SignupResponse,
     UserDetailsResponse,
-    UserOut,
     UserSignup,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -55,19 +54,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     except Exception as e:
         print("Error logging in user:", e)
         raise HTTPException(status_code=500, detail="Login failed")
-
-
-@router.get("/users/", response_model=list[UserOut], tags=["users"])
-def get_users():
-    try:
-        with SessionLocal() as db:
-            user_crud = UserCrud(db=db)
-            users = user_crud.fetch_all_users()
-            return users
-
-    except Exception as e:
-        print("Error fetching users:", e)
-        raise HTTPException(status_code=500, detail="Failed to fetch users")
 
 
 @router.get("/user/details/", response_model=UserDetailsResponse, tags=["users"])

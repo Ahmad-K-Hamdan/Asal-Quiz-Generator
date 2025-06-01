@@ -1,3 +1,6 @@
+import re
+from uuid import uuid4
+
 from app.azure.storage_account_azure import AzureBlobStorage
 from app.models.db_models import Category, Document
 from app.utils.file_checks import check_file_extension, check_file_size
@@ -8,13 +11,14 @@ from sqlalchemy.orm import Session
 
 class DocumentCrud:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: int):
         self.__db = db
+        self.__user_id = user_id
 
-    def fetch_all_documents(self):
-        return self.__db.execute(select(Document)).scalars().all()
+    def _clean(self, name: str):
+        return re.sub(r"[^A-Za-z0-9_.-]", "_", name)
 
-    def get_documents_by_category_id(self, user_id: int, category_id: int):
+    def __category(self, category_id: int):
         category = self.__db.execute(
             select(Category).where(Category.id == category_id)
         ).scalar_one_or_none()
@@ -22,34 +26,21 @@ class DocumentCrud:
         if not category:
             raise HTTPException(status_code=404, detail="Category not found.")
 
-        if category.user_id != user_id:
+        if category.user_id != self.__user_id:
             raise HTTPException(
                 status_code=403,
-                detail="No permission to access this category's documents.",
+                detail="Access Denied.",
             )
 
-        return (
-            self.__db.execute(
-                select(Document).where(Document.category_id == category_id)
-            )
-            .scalars()
-            .all()
-        )
+        return category
 
-    def upload_documents_to_category(
-        self, user_id: int, category_id: int, files: list[UploadFile]
-    ):
-        category = self.__db.execute(
-            select(Category).where(Category.id == category_id)
-        ).scalar_one_or_none()
+    def get_documents_by_category_id(self, category_id: int):
+        return self.__category(category_id).documents
 
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
-
-        if category.user_id != user_id:
-            raise HTTPException(
-                status_code=403, detail="No permission to upload to this category."
-            )
+    def upload_documents_to_category(self, category_id: int, files: list[UploadFile]):
+        category = self.__category(category_id)
+        user_folder = self._clean(category.owner.name)
+        category_folder = self._clean(category.name)
 
         uploaded_docs = []
         azure_blob_storage = AzureBlobStorage()
@@ -62,7 +53,9 @@ class DocumentCrud:
                     status_code=400, detail="File size exceeds the limit."
                 )
 
-            blob_url = azure_blob_storage.upload_file(file, file.filename)
+            blob_filename = f"{uuid4()}_{self._clean(file.filename)}"
+            blob_name = f"{user_folder}/{category_folder}/documents/{blob_filename}"
+            blob_url = azure_blob_storage.upload_file(file, blob_name)
 
             document = Document(
                 name=file.filename, path=blob_url, category_id=category_id
@@ -73,21 +66,12 @@ class DocumentCrud:
         self.__db.commit()
         return uploaded_docs
 
-    def delete_document_by_id(self, user_id: int, document_id: int):
+    def delete_document_by_id(self, document_id: int):
         document = self.__db.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found.")
 
-        category = self.__db.get(Category, document.category_id)
-        if not category:
-            raise HTTPException(
-                status_code=404, detail="Associated category not found."
-            )
-
-        if category.user_id != user_id:
-            raise HTTPException(
-                status_code=403, detail="No permission to delete this document."
-            )
+        self.__category(document.category_id)
 
         azure_blob_storage = AzureBlobStorage()
         azure_blob_storage.delete_blob(document.path)

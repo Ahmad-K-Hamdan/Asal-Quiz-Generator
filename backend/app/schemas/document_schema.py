@@ -9,16 +9,15 @@ class DocumentOut(BaseModel):
 
     @field_validator("name")
     def validate_document_name(cls, document_name):
-        document_name = document_name.strip()
-        if not document_name:
-            raise ValueError("Document name cannot be empty.")
+        if len(document_name.strip()) == 0:
+            raise ValueError("Document name cannot be empty or whitespace.")
         return document_name
 
     @field_validator("path")
     def validate_document_path(cls, document_path):
         document_path = document_path.strip()
-        if not document_path:
-            raise ValueError("Path cannot be empty.")
+        if len(document_path.strip()) == 0:
+            raise ValueError("Document path cannot be empty or whitespace.")
         return document_path
 
     class Config:

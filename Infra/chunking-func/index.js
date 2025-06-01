@@ -1,37 +1,42 @@
-function extractChunks(text, keyphrase, maxLength = 200) {
-    const regex = new RegExp(keyphrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    let match;
+function extractChunks(text, keyphrases, maxLength = 200) {
+    const lines = text.split(/\r?\n/);
     const chunks = {};
- 
-    while ((match = regex.exec(text)) !== null) {
-        const matchStart = match.index;
-        const chunkStart = Math.max(text.lastIndexOf(".", matchStart) + 1, 0);
-        let chunkEnd = text.indexOf(".", matchStart);
-        chunkEnd = chunkEnd !== -1 ? chunkEnd + 1 : text.length;
- 
-        let chunk = text.substring(chunkStart, chunkEnd).trim();
-        if (chunk.length > maxLength) {
-            chunk = chunk.substring(0, maxLength);
+
+    for (let line of lines) {
+        const originalLine = line.trim();
+        const lowerLine = originalLine.toLowerCase();
+
+        let totalMatches = 0;
+
+        for (const keyphrase of keyphrases) {
+            const regex = new RegExp(keyphrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const matches = lowerLine.match(regex);
+            if (matches) {
+                totalMatches += matches.length;
+            }
         }
- 
-        chunks[chunk] = (chunks[chunk] || 0) + 1;
+
+        if (totalMatches > 0) {
+            const chunk = originalLine.length > maxLength ? originalLine.substring(0, maxLength) : originalLine;
+            chunks[chunk] = (chunks[chunk] || 0) + totalMatches;
+        }
     }
- 
+
     return chunks;
 }
- 
+
 const httpTrigger = async function (context, req) {
     try {
         const body = req.body;
         const values = body.values || [];
         const results = [];
- 
+
         for (const record of values) {
             const recordId = record.recordId;
             const data = record.data || {};
-            const text = (data.content || "").toLowerCase();
+            const text = data.content || "";
             const keyphrases = Array.isArray(data.keyphrases) ? data.keyphrases.map(k => k.toLowerCase()) : [];
- 
+
             if (!text || keyphrases.length === 0) {
                 results.push({
                     recordId,
@@ -39,29 +44,20 @@ const httpTrigger = async function (context, req) {
                 });
                 continue;
             }
- 
-            const allChunks = {};
- 
-            for (const keyphrase of keyphrases) {
-                const chunks = extractChunks(text, keyphrase);
-                for (const chunk in chunks) {
-                    allChunks[chunk] = (allChunks[chunk] || 0) + chunks[chunk];
-                }
-            }
- 
-            const chunkList = Object.keys(allChunks).map(chunk => ({
-                chunk,
-                occurrences: allChunks[chunk]
-            }));
- 
+
+            const chunksMap = extractChunks(text, keyphrases);
+            const sortedChunks = Object.entries(chunksMap)
+                .sort((a, b) => b[1] - a[1])
+                .map(([chunk, occurrences]) => ({ chunk, occurrences }));
+
             results.push({
                 recordId,
                 data: {
-                    extractedChunks: chunkList
+                    extractedChunks: sortedChunks
                 }
             });
         }
- 
+
         context.res = {
             status: 200,
             body: { values: results },
@@ -75,5 +71,5 @@ const httpTrigger = async function (context, req) {
         };
     }
 };
- 
+
 module.exports = httpTrigger;

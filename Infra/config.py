@@ -8,8 +8,8 @@ API_VERSION = "2021-04-30-Preview"
 CONTAINER_NAME = "testing-material"
 FUNCTION_APP_NAME = "main-func-2"
 ZIP_DIR_PATH = "chunking-func"
-ZIP_FILE_PATH = "chunking-func.zip"
-COMPONENTS_FOLDER = "temp-components"
+ZIP_FILE_PATH = "Infra/chunking-func.zip"
+COMPONENTS_FOLDER = "Infra/main-components"
 
 COMPONENTS = {
     "indexes": "main-index",

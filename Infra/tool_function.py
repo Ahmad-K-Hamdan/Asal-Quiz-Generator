@@ -2,7 +2,7 @@ import os
 import zipfile
 
 import requests
-from config import FUNC_APP_NAME, ZIP_DIR_PATH, ZIP_FILE_PATH
+from config import FUNCTION_APP_NAME, ZIP_DIR_PATH, ZIP_FILE_PATH
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,8 +24,8 @@ def zip_function_code():
 
 
 def deploy_function_app():
-    print(f"☁️ Deploying function app: {FUNC_APP_NAME}...")
-    kudu_url = f"https://{FUNC_APP_NAME}.scm.azurewebsites.net/api/zipdeploy"
+    print(f"☁️ Deploying function app: {FUNCTION_APP_NAME}...")
+    kudu_url = f"https://{FUNCTION_APP_NAME}.scm.azurewebsites.net/api/zipdeploy"
 
     with open(ZIP_FILE_PATH, "rb") as zip_file:
         response = requests.post(

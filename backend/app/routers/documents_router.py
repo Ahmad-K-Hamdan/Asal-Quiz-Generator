@@ -7,25 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, sta
 router = APIRouter()
 
 
-@router.get("/documents/", response_model=list[DocumentOut], tags=["documents"])
-def get_documents():
-    try:
-        with SessionLocal() as db:
-            document_crud = DocumentCrud(db=db)
-            documents = document_crud.fetch_all_documents()
-
-            return [
-                DocumentOut(
-                    id=doc.id, name=doc.name, path=doc.path, category_id=doc.category_id
-                )
-                for doc in documents
-            ]
-
-    except Exception as e:
-        print("Error fetching documents:", e)
-        raise HTTPException(status_code=500, detail="Failed to fetch documents.")
-
-
 @router.get(
     "/categories/{category_id}/documents",
     response_model=list[DocumentOut],
@@ -34,8 +15,8 @@ def get_documents():
 def get_documents_by_category(category_id: int, user_id: int = Depends(get_user_id)):
     try:
         with SessionLocal() as db:
-            document_crud = DocumentCrud(db=db)
-            documents = document_crud.get_documents_by_category_id(user_id, category_id)
+            document_crud = DocumentCrud(db=db, user_id=user_id)
+            documents = document_crud.get_documents_by_category_id(category_id)
 
             return [
                 DocumentOut(
@@ -62,10 +43,8 @@ def upload_documents(
 ):
     try:
         with SessionLocal() as db:
-            document_crud = DocumentCrud(db=db)
-            uploaded = document_crud.upload_documents_to_category(
-                user_id, category_id, files
-            )
+            document_crud = DocumentCrud(db=db, user_id=user_id)
+            uploaded = document_crud.upload_documents_to_category(category_id, files)
 
             return [
                 DocumentOut(
@@ -88,8 +67,8 @@ def upload_documents(
 def delete_document(document_id: int, user_id: int = Depends(get_user_id)):
     try:
         with SessionLocal() as db:
-            document_crud = DocumentCrud(db=db)
-            document_crud.delete_document_by_id(user_id, document_id)
+            document_crud = DocumentCrud(db=db, user_id=user_id)
+            document_crud.delete_document_by_id(document_id)
             return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     except Exception as e:

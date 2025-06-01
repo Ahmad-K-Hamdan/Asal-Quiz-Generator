@@ -11,7 +11,7 @@ HEADERS = {"api-key": API_KEY, "Content-Type": "application/json"}
 
 
 def export_indexer():
-    url = f"https://{SEARCH_NAME}.search.windows.net/indexes/{INDEXER_NAME}?api-version={API_VERSION}"
+    url = f"https://{SEARCH_NAME}.search.windows.net/indexers/{INDEXER_NAME}?api-version={API_VERSION}"
     request = requests.get(url, headers=HEADERS)
 
     if request.ok:
@@ -37,7 +37,7 @@ def import_indexer():
     with open(path, encoding="utf-8") as f:
         body = json.load(f)
 
-    url = f"https://{SEARCH_NAME}.search.windows.net/indexes/{INDEXER_NAME}?api-version={API_VERSION}"
+    url = f"https://{SEARCH_NAME}.search.windows.net/indexers/{INDEXER_NAME}?api-version={API_VERSION}"
     request = requests.put(url, headers=HEADERS, json=body)
 
     if request.status_code in (200, 201, 204):

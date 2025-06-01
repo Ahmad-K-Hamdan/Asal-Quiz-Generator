@@ -6,6 +6,7 @@ from app.schemas.user_schema import (
     UserSignup,
     serializeCategories,
     serializeDocuments,
+    serializeQuizzes,
     serializeUser,
 )
 from app.utils.string_utils import normalize_email
@@ -58,15 +59,13 @@ class UserCrud:
             user_id=user_in_db.id,
         )
 
-    def fetch_all_users(self):
-        result = self.__db.execute(select(User))
-        users = result.scalars().all()
-        return users
-
     def get_user_with_categories_and_documents(self, user_id: int):
         result = self.__db.execute(
             select(User)
-            .options(selectinload(User.categories).selectinload(Category.documents))
+            .options(
+                selectinload(User.categories).selectinload(Category.documents),
+                selectinload(User.categories).selectinload(Category.quizzes),
+            )
             .filter(User.id == user_id)
         )
         return result.scalars().first()
@@ -80,12 +79,14 @@ class UserCrud:
                     "user": {},
                     "categories": [],
                     "documents": [],
+                    "quizzes": [],
                 }
 
             return {
                 "user": serializeUser(user),
                 "categories": serializeCategories(user.categories),
                 "documents": serializeDocuments(user.categories),
+                "quizzes": serializeQuizzes(user.categories),
             }
 
         except SQLAlchemyError as e:

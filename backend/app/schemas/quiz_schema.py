@@ -26,12 +26,17 @@ class QuizForm(QuizBase):
     pass
 
 
-class QuizListOut(QuizBase):
+class QuizOut(QuizBase):
     id: PositiveInt
     path: str
     category_id: PositiveInt
     created_at: datetime
 
 
-class QuizDetailOut(QuizListOut):
+class QuizDetailOut(QuizOut):
     questions: list[QuestionSchema] | None = None
+
+
+class QuizSaveIn(QuizBase):
+    index_name: str
+    questions: list[QuestionSchema]

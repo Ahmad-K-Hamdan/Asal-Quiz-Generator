@@ -4,7 +4,8 @@ from datetime import datetime
 from app.models.db_models import Category, User
 from app.schemas.category_schema import CategoryOut
 from app.schemas.document_schema import DocumentOut
-from pydantic import BaseModel, EmailStr, PositiveInt, field_validator
+from app.schemas.quiz_schema import QuizOut
+from pydantic import BaseModel, EmailStr, Field, PositiveInt, field_validator
 
 
 def check_password_strength(password: str):
@@ -23,25 +24,33 @@ def check_password_strength(password: str):
     return password.strip()
 
 
+def validate_name(name: str):
+    name = name.strip()
+    if len(name) == 0:
+        raise ValueError("Name cannot be empty or whitespace.")
+    if not all(c.isalnum() or c.isspace() for c in name):
+        raise ValueError("Name must be alphanumeric.")
+    return name
+
+
+def validate_email(email: str):
+    email = email.strip()
+    if len(email) == 0:
+        raise ValueError("Email cannot be empty or whitespace.")
+    return email
+
+
 class BaseUser(BaseModel):
-    name: str
+    name: str = Field(min_length=3, max_length=100)
     email: EmailStr
 
     @field_validator("name")
-    def validate_name(cls, name: str):
-        name = name.strip()
-        if not name:
-            raise ValueError("User name cannot be empty.")
-        if len(name) < 3:
-            raise ValueError("User name must be at least 3 characters.")
-        return name
+    def validate_name_field(cls, name: str):
+        return validate_name(name)
 
     @field_validator("email")
-    def validate_email(cls, email: str):
-        email = email.strip()
-        if not email:
-            raise ValueError("Email cannot be empty.")
-        return email
+    def validate_email_field(cls, email: str):
+        return validate_email(email)
 
 
 class UserSignup(BaseUser):
@@ -61,14 +70,13 @@ class UserLogin(BaseModel):
 
     @field_validator("email")
     def validate_email(cls, email: str):
-        email = email.strip()
-        if not email:
-            raise ValueError("Email cannot be empty.")
-        return email
+        return validate_email(email)
 
     @field_validator("password")
     def validate_password(cls, password: str):
-        return check_password_strength(password)
+        if not password.strip():
+            raise ValueError("Password cannot be empty.")
+        return password.strip()
 
     class Config:
         orm_mode = True
@@ -89,18 +97,12 @@ class SignupResponse(BaseModel):
     created_at: datetime
 
     @field_validator("name")
-    def validate_name(cls, name: str):
-        name = name.strip()
-        if not name:
-            raise ValueError("Name cannot be empty.")
-        return name
+    def validate_name_field(cls, name: str):
+        return validate_name(name)
 
     @field_validator("email")
-    def validate_email(cls, email: str):
-        email = email.strip()
-        if not email:
-            raise ValueError("Email cannot be empty.")
-        return email
+    def validate_email_field(cls, email: str):
+        return validate_email(email)
 
     class Config:
         orm_mode = True
@@ -113,8 +115,9 @@ class LoginResponse(BaseModel):
 
     @field_validator("access_token", "token_type")
     def validate_token_fields(cls, token_field: str):
-        if not token_field.strip():
-            raise ValueError("This field cannot be empty.")
+        token_field = token_field.strip()
+        if len(token_field) == 0:
+            raise ValueError("This field cannot be empty or whitespace.")
         return token_field.strip()
 
     class Config:
@@ -125,6 +128,10 @@ class UserDetailsResponse(BaseModel):
     user: UserOut
     categories: list[CategoryOut]
     documents: list[DocumentOut]
+    quizzes: list[QuizOut]
+
+    class Config:
+        orm_mode = True
 
 
 def serializeUser(user: User):
@@ -147,4 +154,19 @@ def serializeDocuments(categories: list[Category]):
         )
         for cat in categories
         for doc in cat.documents
+    ]
+
+
+def serializeQuizzes(categories: list[Category]):
+    return [
+        QuizOut(
+            id=quiz.id,
+            name=quiz.name,
+            level=quiz.level,
+            path=quiz.path,
+            category_id=quiz.category_id,
+            created_at=quiz.created_at,
+        )
+        for cat in categories
+        for quiz in cat.quizzes
     ]

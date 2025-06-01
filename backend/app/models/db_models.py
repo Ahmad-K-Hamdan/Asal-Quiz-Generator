@@ -46,6 +46,13 @@ class Category(Base):
         "Quiz", back_populates="category", cascade="all, delete-orphan"
     )
 
+    quizzes = relationship(
+        "Quiz",
+        back_populates="category",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
 
 class Document(Base):
     __tablename__ = "documents"
@@ -67,7 +74,7 @@ class Quiz(Base):
     name = Column(String(255), nullable=False)
     level = Column(String(10), nullable=False)
     path = Column(String(512), index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     category_id = Column(
         Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False
     )

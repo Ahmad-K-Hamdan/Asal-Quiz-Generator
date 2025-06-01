@@ -1,42 +1,95 @@
+import datetime
 import json
-from urllib.parse import unquote
+import uuid
 
+from app.azure.search_index import Index
 from app.azure.storage_account_azure import AzureBlobStorage
 from app.models.db_models import Category, Quiz
 from app.schemas.question_schema import QuestionSchema
-from app.schemas.quiz_schema import QuizDetailOut
+from app.schemas.quiz_schema import QuizDetailOut, QuizSaveIn
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 
 class QuizCrud:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: int):
         self.__db = db
+        self.__user_id = user_id
 
-    def delete_quiz(self, quiz_id: int, user_id: int):
+    def get_category(self, category_id: int):
+        category = self.__db.execute(
+            select(Category).where(Category.id == category_id)
+        ).scalar_one_or_none()
+
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        if category.user_id != self.__user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="No permission to access this category's quizzes.",
+            )
+
+        return category
+
+    def delete_quiz_by_id(self, quiz_id: int):
         quiz = self.__db.get(Quiz, quiz_id)
         if not quiz:
             raise HTTPException(status_code=404, detail="Quiz not found.")
 
-        if not quiz.category or quiz.category.user_id != user_id:
+        category = self.get_category(quiz.category_id)
+        if not category:
             raise HTTPException(
-                status_code=403, detail="Not authorized to access this quiz."
+                status_code=404, detail="Associated category not found."
             )
 
-        blob_service = AzureBlobStorage()
-        try:
-            blob_name = unquote("/".join(quiz.path.split("/")[-4:]))
-            print(f"Deleting blob: {blob_name}")
-            blob_service.container_client.delete_blob(blob_name)
-        except Exception as e:
-            print("Failed to delete blob:", e)
+        if category.user_id != self.__user_id:
             raise HTTPException(
-                status_code=500, detail="Failed to delete file from storage."
+                status_code=403, detail="No permission to delete this quiz."
             )
+
+        azure_blob_storage = AzureBlobStorage()
+        azure_blob_storage.delete_blob(quiz.path)
 
         self.__db.delete(quiz)
         self.__db.commit()
+
+    def save_quiz(self, category_id: int, data: QuizSaveIn):
+        category = self.get_category(category_id)
+
+        blob = AzureBlobStorage()
+        random = uuid.uuid4()
+        filename = (
+            f"{category.owner.name}/{category.name}/quizzes/{random}_{data.name}.json"
+        )
+        blob_path = blob.upload_json(
+            [q.dict() for q in data.questions], filename.replace(" ", "_")
+        )
+
+        quiz = Quiz(
+            name=data.name,
+            level=data.level,
+            category_id=category_id,
+            path=blob_path,
+            created_at=datetime.datetime.utcnow(),
+        )
+
+        self.__db.add(quiz)
+        self.__db.commit()
+        self.__db.refresh(quiz)
+
+        Index().delete_index(data.index_name)
+
+        return QuizDetailOut(
+            id=quiz.id,
+            name=quiz.name,
+            level=quiz.level,
+            category_id=quiz.category_id,
+            path=quiz.path,
+            created_at=quiz.created_at,
+            questions=data.questions,
+        )
 
     def get_quizzes_by_category(self, user_id: int, category_id: int):
         category = self.__db.execute(

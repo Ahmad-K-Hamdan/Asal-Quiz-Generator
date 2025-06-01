@@ -1,8 +1,7 @@
 import json
 import os
 from typing import Any
-from urllib.parse import unquote
-from uuid import uuid4
+from urllib.parse import unquote, urlparse
 
 from azure.storage.blob import BlobServiceClient, ContentSettings
 from dotenv import load_dotenv
@@ -42,8 +41,7 @@ class AzureBlobStorage:
 
     def upload_file(self, file, filename: str):
         try:
-            blob_name = f"{uuid4()}_{filename}"
-            blob_client = self.container_client.get_blob_client(blob_name)
+            blob_client = self.container_client.get_blob_client(filename)
 
             blob_client.upload_blob(
                 file.file,
@@ -59,13 +57,32 @@ class AzureBlobStorage:
                 status_code=500, detail="Failed to upload file to storage."
             )
 
+    def upload_quiz(self, data: bytes, filename: str):
+        try:
+            blob_client = self.container_client.get_blob_client(filename)
+            blob_client.upload_blob(
+                data,
+                overwrite=True,
+                content_settings=ContentSettings(content_type="application/json"),
+            )
+            return blob_client.url
+        except Exception as e:
+            print("Error uploading quiz:", e)
+            raise HTTPException(
+                status_code=500, detail="Failed to upload quiz to storage."
+            )
+
     def delete_blob(self, path: str):
         try:
-            blob_name = unquote(path.split("/")[-1])
-            self.container_client.delete_blob(blob_name)
+            blob_path = urlparse(path).path.lstrip("/")
+            print(blob_path)
+            if blob_path.startswith("documents/"):
+                blob_path = blob_path[len("documents/") :]
+            print(blob_path)
+            self.container_client.delete_blob(blob_path)
 
         except Exception as e:
-            print(f"Error deleting blob '{blob_name}' from Azure:", e)
+            print(f"Error deleting blob '{blob_path}' from Azure:", e)
             raise HTTPException(
                 status_code=500, detail="Failed to delete file from storage."
             )

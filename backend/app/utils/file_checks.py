@@ -14,3 +14,8 @@ def check_file_size(file):
 def check_file_extension(filename: str):
     _, ext = os.path.splitext(filename.lower())
     return ext in ALLOWED_EXTENSIONS
+
+
+def check_quiz_extension(filename: str):
+    _, ext = os.path.splitext(filename.lower())
+    return ext == ".json"

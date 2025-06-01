@@ -1,3 +1,5 @@
+from app.schemas.document_schema import DocumentOut
+from app.schemas.quiz_schema import QuizOut
 from pydantic import BaseModel, Field, PositiveInt, field_validator
 
 
@@ -20,3 +22,8 @@ class CategoryOut(BaseModel):
         if len(category_name.strip()) == 0:
             raise ValueError("Category name cannot be empty or whitespace.")
         return category_name
+
+
+class CategoryDetailOut(CategoryOut):
+    documents: list[DocumentOut]
+    quizzes: list[QuizOut]

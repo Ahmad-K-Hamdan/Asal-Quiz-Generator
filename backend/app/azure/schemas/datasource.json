@@ -8,7 +8,7 @@
     "connectionString": null
   },
   "container": {
-    "name": "testing-material",
+    "name": "documents",
     "query": null
   },
   "dataChangeDetectionPolicy": null,
