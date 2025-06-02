@@ -14,10 +14,8 @@ passlib[bcrypt]
 pre-commit==4.2.0
 pydantic
 pyodbc
-pytest
 pypyodbc
 python-jose
 pyupgrade==3.15.2
 sqlalchemy
-uvicorn
 uvicorn[standard]

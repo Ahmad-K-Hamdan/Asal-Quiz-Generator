@@ -5,7 +5,6 @@ from app.schemas.question_schema import QuestionRegen, QuestionSchema, QuizGener
 from app.schemas.quiz_schema import (
     QuizDetailOut,
     QuizForm,
-    QuizListOut,
     QuizOut,
     QuizSaveIn,
 )
@@ -152,7 +151,7 @@ def delete_quiz(quiz_id: int, user_id: int = Depends(get_user_id)):
 
 @router.get(
     "/categories/{category_id}/quizzes",
-    response_model=list[QuizListOut],
+    response_model=list[QuizOut],
     tags=["quizzes"],
 )
 def get_category_quizzes(category_id: int, user_id: int = Depends(get_user_id)):
