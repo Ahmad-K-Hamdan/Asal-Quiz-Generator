@@ -21,20 +21,36 @@ steps:
       python -m pip install --upgrade pip
       pip install -r requirements.txt
     workingDirectory: $(backend_dir)
-    displayName: 'Install Python backend dependencies from requirements.txt'
+    displayName: 'Install Python backend dependencies'
 
-  - script: |
-      cd $(backend_dir)
-      start /B uvicorn app.main:app 
-    displayName: 'Run Backend Server'
+  # ------------ Run Backend and Kill After 5 Seconds ------------
+  - powershell: |
+      cd "$(backend_dir)"
 
-  # ------------ Backend Tests  ------------
-  - script: pytest
-    workingDirectory: $(backend_dir)
-    displayName: 'Run Backend Tests'
-    condition: false
+      Write-Output " Starting Uvicorn..."
+      $proc = Start-Process "uvicorn" -ArgumentList "app.main:app", "--host", "127.0.0.1", "--port", "8000" `
+               -PassThru `
+               -RedirectStandardOutput "stdout.txt" `
+               -RedirectStandardError "stderr.txt" `
+               -NoNewWindow
 
-  # ------------ Node Frontend ------------
+      Start-Sleep -Seconds 5
+
+      $stdout = Get-Content "stdout.txt" -Raw
+      $stderr = Get-Content "stderr.txt" -Raw
+      $output = $stdout + "`n" + $stderr
+
+      if ($output -notmatch "Application startup complete") {
+          Write-Output " Server failed to start."
+          Write-Output $output
+          Exit 1
+      } else {
+          Write-Output " Server started successfully. Killing process ID $($proc.Id)..."
+          Stop-Process -Id $proc.Id -Force
+      }
+    displayName: 'Start backend, verify, and kill after 5 seconds'
+
+  # ------------ Node Frontend Setup & Build ------------
   - task: NodeTool@0
     inputs:
       versionSpec: '18.x'
@@ -46,8 +62,14 @@ steps:
     workingDirectory: $(frontend_dir)
     displayName: 'Install and Build Frontend'
 
-  # ------------ Frontend Tests ------------
+  # ------------ Optional: Frontend Tests ------------
   - script: npm run test
     workingDirectory: $(frontend_dir)
-    displayName: ' Run Frontend Tests'
+    displayName: 'Run Frontend Tests'
+    condition: false
+
+  # ------------ Optional: Backend Tests ------------
+  - script: pytest
+    workingDirectory: $(backend_dir)
+    displayName: 'Run Backend Tests'
     condition: false

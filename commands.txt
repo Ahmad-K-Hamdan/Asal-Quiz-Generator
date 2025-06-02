@@ -1,3 +1,0 @@
-Get-ChildItem -Directory -Recurse -Filter "__pycache__" | Remove-Item -Recurse -Force
-
-pre-commit run --all-files
