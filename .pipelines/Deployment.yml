@@ -1,0 +1,65 @@
+trigger: none
+pr: none
+
+variables:
+  ACR_NAME: project1container1registry
+  ACR_LOGIN: $(ACR_NAME).azurecr.io
+  BACKEND_IMAGE: backendapp
+  FRONTEND_IMAGE: frontendapp
+  TAG: latest
+
+  dockerRegistryServiceConnection: quiz-acr-service-conn
+  armServiceConnection: QuizServiceConn
+
+stages:
+  # Build & push
+  - stage: Build
+    jobs:
+      - job: BuildPush
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: Docker@2
+            displayName: Build & push backend
+            inputs:
+              command: buildAndPush
+              repository: $(BACKEND_IMAGE)
+              dockerfile: backend/Dockerfile
+              tags: |
+                $(TAG)
+              containerRegistry: $(dockerRegistryServiceConnection)
+
+          - task: Docker@2
+            displayName: Build & push frontend
+            inputs:
+              command: buildAndPush
+              repository: $(FRONTEND_IMAGE)
+              dockerfile: frontend/Dockerfile
+              tags: |
+                $(TAG)
+              containerRegistry: $(dockerRegistryServiceConnection)
+
+  # Deploy
+  - stage: Deploy
+    dependsOn: Build
+    jobs:
+      - job: DeployBackend
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: Deploy backend
+            inputs:
+              azureSubscription: $(armServiceConnection)
+              appName: quiz-generator-backend-webapp
+              imageName: |
+                $(ACR_LOGIN)/$(BACKEND_IMAGE):$(TAG)
+
+      - job: DeployFrontend
+        pool: { vmImage: ubuntu-latest }
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: Deploy frontend
+            inputs:
+              azureSubscription: $(armServiceConnection)
+              appName: quiz-generator-frontend-webapp
+              imageName: |
+                $(ACR_LOGIN)/$(FRONTEND_IMAGE):$(TAG)

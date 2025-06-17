@@ -147,19 +147,3 @@ def delete_quiz(quiz_id: int, user_id: int = Depends(get_user_id)):
     except Exception as e:
         print("Error deleting quiz:", e)
         raise HTTPException(status_code=500, detail="Failed to delete quiz.")
-
-
-@router.get(
-    "/categories/{category_id}/quizzes",
-    response_model=list[QuizOut],
-    tags=["quizzes"],
-)
-def get_category_quizzes(category_id: int, user_id: int = Depends(get_user_id)):
-    try:
-        with SessionLocal() as db:
-            crud = QuizCrud(db)
-            quizzes = crud.get_quizzes_by_category(user_id, category_id)
-            return quizzes
-    except Exception as e:
-        print("Error fetching quizzes:", e)
-        raise HTTPException(status_code=500, detail="Failed to fetch quizzes")

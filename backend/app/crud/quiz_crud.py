@@ -91,25 +91,8 @@ class QuizCrud:
             questions=data.questions,
         )
 
-    def get_quizzes_by_category(self, user_id: int, category_id: int):
-        category = self.__db.execute(
-            select(Category).where(Category.id == category_id)
-        ).scalar_one_or_none()
-
-        if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
-
-        if category.user_id != user_id:
-            raise HTTPException(
-                status_code=403,
-                detail="No permission to access this category's documents.",
-            )
-
-        return (
-            self.__db.execute(select(Quiz).where(Quiz.category_id == category_id))
-            .scalars()
-            .all()
-        )
+    def get_quizzes_by_category_id(self, category_id: int):
+        return self.get_category(category_id).quizzes
 
     def get_quiz_with_questions(self, quiz_id: int, user_id: int):
         quiz = self.__db.get(Quiz, quiz_id)
