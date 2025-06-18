@@ -1,8 +1,9 @@
 import json
-import os
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
 
+from app import constants
+from app.config import KeyVault
 from azure.storage.blob import BlobServiceClient, ContentSettings
 from dotenv import load_dotenv
 from fastapi import HTTPException
@@ -12,9 +13,9 @@ class AzureBlobStorage:
     def __init__(self):
         load_dotenv()
 
-        self.__account_name = os.getenv("STORAGE_ACCOUNT_NAME")
-        self.__account_key = os.getenv("STORAGE_ACCOUNT_KEY")
-        self.__container_name = os.getenv("CONTAINER_NAME")
+        self.__account_name = constants.STORAGE_ACCOUNT_NAME
+        self.__account_key = KeyVault.STORAGE_ACCOUNT_KEY
+        self.__container_name = constants.CONTAINER_NAME
 
         if (
             not self.__account_name
@@ -74,17 +75,17 @@ class AzureBlobStorage:
 
     def delete_blob(self, path: str):
         try:
-            blob_path = urlparse(path).path.lstrip("/")
-            print(blob_path)
-            if blob_path.startswith("documents/"):
-                blob_path = blob_path[len("documents/") :]
-            print(blob_path)
+            blob_path = path.lstrip("/")
+
+            print(f"Final blob path for deletion: {blob_path}")
+
             self.container_client.delete_blob(blob_path)
 
         except Exception as e:
             print(f"Error deleting blob '{blob_path}' from Azure:", e)
             raise HTTPException(
-                status_code=500, detail="Failed to delete file from storage."
+                status_code=500,
+                detail="Failed to delete file from storage.",
             )
 
     def retrieve_blob(self, path: str):

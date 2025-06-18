@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.azure.storage_account_azure import AzureBlobStorage
-from app.models.db_models import QuizAttempt
+from app.models.db_models import Category, QuizAttempt
 from app.schemas.quiz_attempt_schema import (
     DetailedAnswerItem,
     QuizAttemptDetailOut,
@@ -17,20 +17,39 @@ class QuizAttemptCrud:
     def __init__(self, db: Session):
         self.__db = db
 
+    def _clean_name(self, name: str) -> str:
+        return name.replace(" ", "_")
+
     def create_attempt(
-        self, user_id: int, answers: list[DetailedAnswerItem]
+        self,
+        user_id: int,
+        answers: list[DetailedAnswerItem],
+        username: str,
+        category_id: int,
     ) -> QuizAttemptOut:
+        parsed_answers = [
+            DetailedAnswerItem(**a) if isinstance(a, dict) else a for a in answers
+        ]
+
         full_attempt = {
             "submitted_at": datetime.utcnow().isoformat(),
-            "answers": [a.dict() for a in answers],
+            "answers": [a.dict() for a in parsed_answers],
         }
+        category = self.__db.query(Category).filter(Category.id == category_id).first()
+        category_name = category.name
 
         blob_service = AzureBlobStorage()
-        blob_path = f"documents/attempts/{uuid4()}.json"
+        safe_username = self._clean_name(username)
+        safe_category = self._clean_name(category_name)
+        filename = f"{uuid4()}.json"
+        blob_path = f"{safe_username}/{safe_category}/attempts/{filename}"
         blob_service.upload_json(full_attempt, blob_path)
 
         attempt = QuizAttempt(
-            user_id=user_id, submitted_at=datetime.utcnow(), path=blob_path
+            user_id=user_id,
+            category_id=category_id,
+            submitted_at=datetime.utcnow(),
+            path=blob_path,
         )
         self.__db.add(attempt)
         self.__db.commit()
@@ -64,14 +83,31 @@ class QuizAttemptCrud:
             answers=[DetailedAnswerItem(**a) for a in data["answers"]],
         )
 
-    def get_user_attempts(self, user_id: int) -> list[QuizAttemptOut]:
+    def get_user_attempts(self, user_id: int, category_id: int) -> list[QuizAttemptOut]:
         attempts = (
             self.__db.query(QuizAttempt)
-            .filter(QuizAttempt.user_id == user_id)
+            .filter_by(user_id=user_id, category_id=category_id)
             .order_by(QuizAttempt.submitted_at.desc())
             .all()
         )
-
         return [
             QuizAttemptOut(id=att.id, submitted_at=att.submitted_at) for att in attempts
         ]
+
+    def delete_attempt(self, attempt_id: int, user_id: int):
+        attempt = (
+            self.__db.query(QuizAttempt)
+            .filter(QuizAttempt.id == attempt_id, QuizAttempt.user_id == user_id)
+            .first()
+        )
+
+        if not attempt:
+            raise HTTPException(
+                status_code=404, detail="Attempt not found or not authorized."
+            )
+
+        blob_service = AzureBlobStorage()
+        blob_service.delete_blob(attempt.path)
+
+        self.__db.delete(attempt)
+        self.__db.commit()

@@ -1,0 +1,5 @@
+STORAGE_ACCOUNT_NAME = "maindocumentstorage"
+CONTAINER_NAME = "documents"
+DB_NAME = "central-database"
+DB_SERVER_NAME = "central-our-server.database.windows.net"
+DB_USERNAME = "Trainees"

@@ -52,6 +52,7 @@ class Category(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    quiz_attempts = relationship("QuizAttempt", back_populates="category")
 
 
 class Document(Base):
@@ -87,7 +88,9 @@ class QuizAttempt(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     submitted_at = Column(DateTime, default=datetime.utcnow)
     path = Column(String(512), nullable=False)
 
     user = relationship("User", back_populates="quiz_attempts")
+    category = relationship("Category", back_populates="quiz_attempts")

@@ -32,4 +32,5 @@ class QuizAttemptDetailOut(BaseModel):
 
 
 class AttemptCreateRequest(BaseModel):
+    category_id: PositiveInt
     answers: list[DetailedAnswerItem]

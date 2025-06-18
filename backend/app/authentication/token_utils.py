@@ -1,15 +1,12 @@
 import datetime
-import os
 
-from dotenv import load_dotenv
+from app.config import KeyVault
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
-load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-
+SECRET_KEY = KeyVault.SECRET_KEY
+ALGORITHM = KeyVault.ALGORITHM
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 

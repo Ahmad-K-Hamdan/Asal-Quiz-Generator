@@ -1,5 +1,5 @@
-import os
-
+from app import constants
+from app.config import KeyVault
 from dotenv import load_dotenv
 
 
@@ -7,10 +7,10 @@ def get_azure_sql_string():
     # Load the enviromental variables
     load_dotenv()
 
-    DB_USERNAME = os.getenv("DB_USERNAME")
-    DB_PASSWORD = os.getenv("DB_PASSWORD")
-    DB_NAME = os.getenv("DB_NAME")
-    DB_SERVER_NAME = os.getenv("DB_SERVER_NAME")
+    DB_USERNAME = constants.DB_USERNAME
+    DB_PASSWORD = KeyVault.DB_PASSWORD
+    DB_NAME = constants.DB_NAME
+    DB_SERVER_NAME = constants.DB_SERVER_NAME
 
     # Create the Azure SQL database connection string
     AZURE_SQL_CONNECTION_STRING = (
