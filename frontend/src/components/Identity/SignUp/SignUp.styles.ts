@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import {
   Button,
   LargeTitle,
+  Text,
 } from '@fluentui/react-components'; 
 export const Container = styled.div`
     display: flex;
@@ -43,4 +44,16 @@ export const StyledLabel = styled.span`
 
 export const StyledButton = styled(Button)`
 margin-top:0.95rem;
+`
+
+export const ErrorMessage = styled(Text)`
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: block;
+`;
+export const Hint= styled(Text)`
+  margin-top: 0.5rem;
+  display: block;
+  text-align: end;
 `

@@ -1,9 +1,9 @@
-import { Button, Title1, tokens } from "@fluentui/react-components";
+import { Button, Text, Title1, tokens } from "@fluentui/react-components";
 import styled from "styled-components";
 
 
 export const Choice = styled.li`
-list-style-type:upper-alpha;
+list-style-type:none;
 padding:5px;
 
 &:hover{
@@ -34,9 +34,42 @@ padding:10px;
 export const ButtonsContainer = styled.div`
 display:flex;
 justify-content:flex-end;
-gap:20px
+gap:10px
 `
 
 export const Btn = styled(Button)`
 margin:10px
 `
+export const CorrectAnswer = styled(Text)`
+color: green;
+font-weight: bold;
+margin-top: 10px;
+`
+export const WrongAnswer = styled(Text)`
+color: red;
+font-weight: bold;
+margin-top: 10px;
+`
+export const Explanation = styled(Text)`
+display: block;
+color: gray;
+font-style: italic;
+margin-top: 10px;
+`
+export const Answer = styled(Text)`
+  background-color: #e6f1fb;  
+  color: #0b6bcb;             
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  font-weight: 500;
+  font-size: 14px;
+`;
+  
+export const RegenerationReasonLabel = styled(Text)`
+  color: #444;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 10px;
+  display: inline-block;
+`;

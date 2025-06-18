@@ -10,6 +10,7 @@ import Quiz from './components/QuizGenerator/Quiz';
 import { Basic } from './components/Dashboard/User/Dashboard';
 import {Categories} from './components/Categories/Categories';
 import Category from './components/Category/Category';
+import Quizes from './components/Quizes/Quizes';
 function App() {
   return (
     <Router>
@@ -25,10 +26,11 @@ function App() {
         } />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
-        <Route path='/view-quiz' element={<Quiz />} />
+        <Route path='categories/:id/view-quiz' element={<Quiz />} />
         <Route path='/dashboard' element={<Basic />} />
         <Route path='/categories' element={<Categories />} />
         <Route path='/categories/:id' element={<Category />} />
+        <Route path='/categories/:id/quizzes' element={<Quizes />} />
       </Routes>
     </Router>
   );

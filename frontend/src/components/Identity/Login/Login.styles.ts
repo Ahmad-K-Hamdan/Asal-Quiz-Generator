@@ -45,3 +45,16 @@ export const StyledLabel = styled.span`
 export const StyledButton = styled(Button)`
   margin-top: 0.95rem;
 `;
+export const PasswordWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+export const ToggleIcon = styled.span`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #555;
+`;

@@ -1,18 +1,23 @@
 import {
   Field,
   Input,
+  Link,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
   Title1,
 } from '@fluentui/react-components';
-import  { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import logo from '../../../assets/images/logo.png';
-import { Container, LogoSection, FormContainer, Title, StyledLabel, StyledButton } from './SignUp.styles';
+import { Container, LogoSection, FormContainer, Title, StyledLabel, StyledButton, ErrorMessage, Hint } from './SignUp.styles';
+import { SignUpAPI } from '../../../APIs/Identity/SignUpAPI';
 type FormData = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string
 }
-function SignUp() : JSX.Element{
+function SignUp(): JSX.Element {
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -21,15 +26,43 @@ function SignUp() : JSX.Element{
     confirmPassword: '',
   });
 
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
-  const handleSubmit = (e: FormEvent<HTMLFormElement>)=>{
-    e.preventDefault()
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long')
+    } else if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least one uppercase letter')
+    } else if (!/[a-z]/.test(password)) {
+      setError('Password must contain at least one lowercase letter')
+    }
+    else if (!/[0-9]/.test(password)) {
+      setError('Password must contain at least one Digit')
+    }
+    else if (!/[!@#$%^&*]/.test(password)) {
+      setError('Password must contain at least one special character')
+    }
+    else {
+      setError('')
+    }
   }
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    SignUpAPI(formData, setError, setSuccess)
+  }
+  useEffect(() => {
+    if (formData.password) {
+      validatePassword(formData.password)
+    }
+
+  }, [formData.password])
 
   return (
     <Container>
@@ -71,21 +104,19 @@ function SignUp() : JSX.Element{
               required
             />
           </Field>
+          <Hint>Aleary have an account?
+            <Link href='/login'>Login</Link>
+          </Hint>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
 
-          <Field label={<StyledLabel>Confirm Password</StyledLabel>}>
-            <Input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-            />
-          </Field>
-
-          <StyledButton appearance="primary" type="submit">
+          <StyledButton appearance="primary" type="submit" disabled={!formData.name || !formData.email || !formData.password || Boolean(error)}>
             Sign Up
           </StyledButton>
+          {success && <MessageBar intent="success">
+            <MessageBarBody>
+              <MessageBarTitle>Sign Up Successfully!</MessageBarTitle>
+            </MessageBarBody>
+          </MessageBar>}
         </form>
       </FormContainer>
     </Container>

@@ -9,170 +9,333 @@ import {
   TableRow,
   Text,
   Card,
+  Divider,
 } from "@fluentui/react-components";
-import { DocumentAdd20Regular } from "@fluentui/react-icons";
-import { ButtonsContainer, Container, FormGroup, HiddenInput, StyledButton, StyledTable } from "./Category.styles";
+import { Delete20Regular, DocumentAdd20Regular, Eye20Regular, Play20Regular, Play24Regular } from "@fluentui/react-icons";
+import { ButtonsContainer, Container, DeleteButton, FormGroup, HiddenInput, PageWrapper, QuizActions, StyledButton, StyledTable } from "./Category.styles";
+import { GetDocumentsByCategory } from "../../APIs/Documents/GetDocumentsByCategory";
+import { DeleteDocument } from "../../APIs/Documents/DeleteDocument";
+import { UploadDocuments } from "../../APIs/Documents/UploadDocuments";
+import { Spinner, SpinnerSize } from "@fluentui/react";
+import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
+import LoadingDialog from "./LoadingDialog";
+import GenerateQuizDialog from "./GenerateQuizDialog";
+import { GetCategoryById } from "../../APIs/Categories/GetCategoryById";
+import { GenerateQuiz } from "../../APIs/Quizes/GenerateQuiz";
+import { QuizQuestion } from "../QuizGenerator/data/quiz";
 
 
-type CategoryType = {
+export type Document = {
   id: number;
   name: string;
-  numberOfDocuments: number;
-  maxDocuments: number;
+  path: string;
+  category_id: number;
 };
 
-type Document = {
-  id: number;
-  name: string;
-  uploadedAt: string;
-};
 
-const categories: CategoryType[] = [
-  { id: 1, name: "Operating System", numberOfDocuments: 1, maxDocuments: 3 },
-  { id: 2, name: "Networking", numberOfDocuments: 2, maxDocuments: 3 },
-  { id: 3, name: "Software Engineering", numberOfDocuments: 3, maxDocuments: 3 },
-  { id: 4, name: "Electronics", numberOfDocuments: 1, maxDocuments: 3 },
-  { id: 5, name: "Computer Architecture", numberOfDocuments: 1, maxDocuments: 3 },
-  { id: 6, name: "Data Structures", numberOfDocuments: 1, maxDocuments: 3 },
-  { id: 7, name: "Algorithms", numberOfDocuments: 1, maxDocuments: 3 },
-  { id: 8, name: "Database Management Systems", numberOfDocuments: 1, maxDocuments: 3 },
-];
-
-const mockDocuments: Record<number, Document[]> = {
-  1: [{ id: 1, name: "Process Scheduling.pdf", uploadedAt: "2025-05-10" }],
-  2: [
-    { id: 1, name: "TCP_IP_Model.docx", uploadedAt: "2025-05-08" },
-    { id: 2, name: "OSI_Layers.pdf", uploadedAt: "2025-05-09" },
-  ],
-  3: [
-    { id: 1, name: "SDLC_Phases.pdf", uploadedAt: "2025-05-05" },
-    { id: 2, name: "Agile_Overview.docx", uploadedAt: "2025-05-06" },
-    { id: 3, name: "UML_Diagrams.pdf", uploadedAt: "2025-05-07" },
-  ],
-};
 
 const Category: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate()
-
-  const [category, setCategory] = React.useState<CategoryType | null>(null);
   const [documents, setDocuments] = React.useState<Document[]>([]);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = React.useState(false);
   const [isGeneratedQuiz, setIsGeneratedQuiz] = React.useState(false);
-
+  const [loading, setLoading] = React.useState(true);
+  const [loadingDialog, setLoadingDialog] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = React.useState<number | null>(null);
+  const [categoryName, setCategoryName] = React.useState("");
+  const [isOpenGenerateDialog, setIsOpenGenerateDialog] = React.useState(false);
+  const [quizName, setQuizName] = React.useState("");
+  const [difficulty, setDifficulty] = React.useState("easy");
+  const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
+  const [indexName, setIndexName] = React.useState("");
   React.useEffect(() => {
     if (!id) return;
-    const foundCategory = categories.find((cat) => cat.id === parseInt(id));
-    if (foundCategory) {
-      setCategory(foundCategory);
-      setDocuments(mockDocuments[foundCategory.id] || []);
-    }
+    GetCategoryById(parseInt(id), setCategoryName)
+    GetDocumentsByCategory(parseInt(id), setDocuments)
+      .finally(() => {
+        setLoading(false);
+      })
   }, [id]);
   function handleClick() {
     if (inputRef.current) {
       inputRef.current.click();
     }
   }
-  function handleAddDocument(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAddDocument(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    //API call to upload the document
-    //API call to get all documents
+    if(file){
+    setLoadingDialog(true);
+    await UploadDocuments(parseInt(id as string), file).finally(() => {
+      setLoadingDialog(false);
+    });
+    setLoading(true);
+    await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
+      setLoading(false);
+    });
   }
-  function handleGenerateQuiz() {
-    // this will changed later 
+  }
+  function handleOpenGenerateQuizDialog() {
+    setIsOpenGenerateDialog(true);
+  }
+  async function handleGenerateQuiz() {
+    setIsOpenGenerateDialog(false);
     setIsGeneratingQuiz(true);
-    setTimeout(() => {
-      setIsGeneratingQuiz(false);
-      setIsGeneratedQuiz(true);
- }, 2000);
-    //API call to generate quiz
-    // finally (setIsGeneratingQuiz(false);setIsGeneratedQuiz(true))
+    // Simulate API call to generate quiz
+    await GenerateQuiz(parseInt(id as string), quizName, difficulty, setQuestions, setIndexName)
+      .then(() => {
+        setIsGeneratingQuiz(false);
+        setIsGeneratedQuiz(true);
+      })
+  }
+  function handleOpenConfirmDelete(documentId: number) {
+    setConfirmDelete(true);
+    setSelectedDocumentId(documentId);
+  }
+  async function handleDeleteDocument(documentId: number) {
+    setConfirmDelete(false);
+    setLoadingDialog(true);
+    await DeleteDocument(documentId)
+      .finally(() => {
+        setLoadingDialog(false);
+      })
+    setLoading(true);
+    await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
+      setLoading(false);
+    });
   }
 
-  if (!category) return <Text>Loading category...</Text>;
+  //this will changed later
+  if (!categoryName) return <Text>Loading category...</Text>;
 
   return (
-    <>
-    {isGeneratingQuiz || isGeneratedQuiz ? (
-  <Container>
-    <Card>
-      <Text size={700} weight="bold">{category.name}</Text>
-      <Text size={400}>Documents ({documents.length} / {category.maxDocuments})</Text>
-    </Card>
+    <PageWrapper>
+      {isGeneratingQuiz || isGeneratedQuiz ? (
+        <Container>
+          <Card>
+            <Text size={700} weight="bold">{categoryName}</Text>
+            <Text size={400}>Documents ({documents.length} / {3})</Text>
+          </Card>
 
-    <Card>
-      <Text size={500} weight="semibold">
-        {isGeneratingQuiz ? "Generating your quiz..." : "The quiz is ready!"}
-      </Text>
-      {isGeneratedQuiz && (
-        <ButtonsContainer>
-          <Button appearance="primary" onClick={() => navigate("/view-quiz")}>
-            View Quiz
-          </Button>
-        </ButtonsContainer>
-      )}
-    </Card>
-  </Container>
-) :
-                <Container>
-      <Card>
-        <Text size={700} weight="bold">{category.name}</Text>
-        <Text size={400}>Documents ({documents.length} / {category.maxDocuments})</Text>
+          <Card>
+            <Text size={500} weight="semibold">
+              {isGeneratingQuiz ? "Generating your quiz..." : "The quiz is ready!"}
+            </Text>
+            {isGeneratedQuiz && (
+              <ButtonsContainer>
+                <Button appearance="primary" onClick={() => navigate(`/categories/${id}/view-quiz`,
+                  {
+                    state: {
+                      questions: questions,
+                      quizName: quizName,
+                      difficulty: difficulty,
+                      indexName: indexName
+                    }
+                  }
+                )}>
+                  View Quiz
+                </Button>
+              </ButtonsContainer>
+            )}
+          </Card>
+        </Container>
+      ) :
+        <Container>
+          <Card>
+            <Text size={700} weight="bold">{categoryName}</Text>
+            <Text size={400}>Documents ({documents.length} / {3})</Text>
+          </Card>
+
+          <Card style={{ borderRadius: '10px', padding: '24px' }}>
+            <Text size={500} weight="semibold">Documents</Text>
+            <StyledTable>
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell>#</TableHeaderCell>
+                  <TableHeaderCell>Document Name</TableHeaderCell>
+                  <TableHeaderCell>Actions</TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ?
+                  <TableRow>
+                    <TableCell colSpan={3}>
+                      <Spinner style={{ padding: '10px' }} label="Loading documents..." size={SpinnerSize.medium} />
+                    </TableCell>
+                  </TableRow>
+                  : documents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Text>No documents added yet.</Text>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell>{doc.id}</TableCell>
+                        <TableCell>{doc.name}</TableCell>
+                        <TableCell>
+                          <DeleteButton
+                            title="Delete Document"
+                            icon={<Delete20Regular />}
+                            onClick={() => handleOpenConfirmDelete(doc.id)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+              </TableBody>
+            </StyledTable>
+
+            {!loading && documents.length < 3 && (
+              <FormGroup>
+                <HiddenInput
+                  type="file"
+                  ref={inputRef}
+                  onChange={handleAddDocument}
+                />
+                <Button
+                  icon={<DocumentAdd20Regular />}
+                  onClick={handleClick}
+                  appearance="primary"
+                >
+                  Add Document
+                </Button>
+              </FormGroup>
+            )}
+
+            {documents.length > 0 && (
+              <StyledButton onClick={handleOpenGenerateQuizDialog} appearance="primary"
+                icon={<Play24Regular />}  >
+                Generate Quiz
+              </StyledButton>
+            )}
+          </Card>
+        </Container>}
+      <Divider />
+
+      <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
+        <Text size={500} weight="semibold">Available Quizes</Text>
+        <Text size={400}>Quizes just created but the user not attempt this</Text>
+        <StyledTable>
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell>#</TableHeaderCell>
+              <TableHeaderCell>Quiz Name</TableHeaderCell>
+              <TableHeaderCell>Actions</TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ?
+              <TableRow>
+                <TableCell colSpan={3}>
+                  <Spinner style={{ padding: '10px' }} label="Loading documents..." size={SpinnerSize.medium} />
+                </TableCell>
+              </TableRow>
+              : documents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3}>
+                    <Text>No Quizes added yet.</Text>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                documents.map((doc) => (
+                  <TableRow key={doc.id}>
+                    <TableCell>{doc.id}</TableCell>
+                    <TableCell>{doc.name}</TableCell>
+                    <TableCell>
+                      <QuizActions>
+                        <Button
+                          appearance="primary"
+                          title="View Quiz"
+                          icon={<Eye20Regular />}
+                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                        />
+
+                        <Button
+                          appearance="primary"
+                          title="Start Quiz"
+                          icon={<Play20Regular />}
+                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                        />
+
+                        <DeleteButton
+                          title="Delete Quiz"
+                          icon={<Delete20Regular />}
+                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                        />
+                      </QuizActions>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+          </TableBody>
+        </StyledTable>
+
       </Card>
 
-      <StyledTable>
-        <TableHeader>
-          <TableRow>
-            <TableHeaderCell>#</TableHeaderCell>
-            <TableHeaderCell>Document Name</TableHeaderCell>
-            <TableHeaderCell>Uploaded At</TableHeaderCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {documents.length === 0 ? (
+      <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
+        <Text size={500} weight="semibold">Completed Quizes</Text>
+        <Text size={400}>Quizes already finished</Text>
+        <StyledTable>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={3}>
-                <Text>No documents added yet.</Text>
-              </TableCell>
+              <TableHeaderCell>#</TableHeaderCell>
+              <TableHeaderCell>Quiz Name</TableHeaderCell>
+              <TableHeaderCell>Actions</TableHeaderCell>
             </TableRow>
-          ) : (
-            documents.map((doc) => (
-              <TableRow key={doc.id}>
-                <TableCell>{doc.id}</TableCell>
-                <TableCell>{doc.name}</TableCell>
-                <TableCell>{doc.uploadedAt}</TableCell>
+          </TableHeader>
+          <TableBody>
+            {loading ?
+              <TableRow>
+                <TableCell colSpan={3}>
+                  <Spinner style={{ padding: '10px' }} label="Loading documents..." size={SpinnerSize.medium} />
+                </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </StyledTable>
+              : documents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3}>
+                    <Text>No Quizes added yet.</Text>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                documents.map((doc) => (
+                  <TableRow key={doc.id}>
+                    <TableCell>{doc.id}</TableCell>
+                    <TableCell>{doc.name}</TableCell>
+                    <TableCell>
+                      <QuizActions>
+                        <Button
+                          title="View Quiz"
+                          appearance="primary"
+                          icon={<Eye20Regular />}
+                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                        />
 
-      {documents.length < category.maxDocuments && (
-        <FormGroup>
-                
-      <HiddenInput
-        type="file"
-        ref={inputRef}
-        onChange={handleAddDocument}
-      />
-      <Button
-        icon={<DocumentAdd20Regular />}
-        onClick={handleClick}
-        appearance="primary"
-      >
-        Add Document
-      </Button>
-        </FormGroup>
-      )}
+                        <DeleteButton
+                          title="Delete Quiz"
+                          icon={<Delete20Regular />}
+                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                        />
+                      </QuizActions>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+          </TableBody>
+        </StyledTable>
 
-      {documents.length > 0 && (
-        <StyledButton onClick={handleGenerateQuiz} appearance="primary"  >
-          Generate Quiz
-        </StyledButton>
-      )}
-    </Container>}
-        </>
+      </Card>
+
+      {isOpenGenerateDialog && id && <GenerateQuizDialog categoryId={id} isOpenGenerateDialog={isOpenGenerateDialog} setIsOpenGenerateDialog={setIsOpenGenerateDialog} onGenerateQuiz={handleGenerateQuiz} quizName={quizName} setQuizName={setQuizName} difficulty={difficulty} setDifficulty={setDifficulty} />}
+
+      {loadingDialog && <LoadingDialog loadingDialog={loadingDialog} />}
+
+      {confirmDelete && selectedDocumentId && <ConfirmDeleteDialog documentId={selectedDocumentId} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} onDeleteDocument={handleDeleteDocument} />}
+
+    </PageWrapper>
   );
 };
 
