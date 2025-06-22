@@ -1,3 +1,4 @@
+from app.logger import quiz_logger
 from app.routers import (
     categories_router,
     documents_router,
@@ -5,10 +6,19 @@ from app.routers import (
     quizzes_router,
     users_router,
 )
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    quiz_logger.info(f"📥 Request: {request.method} {request.url}")
+    response = await call_next(request)
+    quiz_logger.info(f"📤 Response: {response.status_code} for {request.url}")
+    return response
+
 
 app.add_middleware(
     CORSMiddleware,

@@ -13,6 +13,7 @@ class KeyVaultVars:
         self.DB_PASSWORD = self._get_secret("DB-PASSWORD")
         self.SECRET_KEY = self._get_secret("SECRET-KEY")
         self.ALGORITHM = self._get_secret("ALGORITHM")
+        self.log_connection = self._get_secret("LOG-CON")
 
     def _get_secret(self, name: str, quote=False) -> str:
         value = self.client.get_secret(name).value

@@ -5,6 +5,7 @@ autopep8
 azure-identity
 azure-storage-blob
 azure-keyvault-secrets
+azure-monitor-opentelemetry
 black==24.4.2
 dotenv
 fastapi
