@@ -1,16 +1,15 @@
 import json
-import os
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
+from app.config import KeyVault
+from app.utils.files_loader import load_file
 
 
 class Indexer:
     def __init__(self):
-        load_dotenv()
-        self.__service_name = os.getenv("AZURE_COG_SEARCH_NAME")
-        self.__admin_key = os.getenv("AZURE_COG_SEARCH_ADMIN_KEY")
+        self.__service_name = KeyVault.AZURE_COG_SEARCH_NAME
+        self.__admin_key = KeyVault.AZURE_COG_SEARCH_ADMIN_KEY
         self.__api_version = "2023-10-01-Preview"
 
         if not self.__service_name or not self.__admin_key:
@@ -27,7 +26,7 @@ class Indexer:
     def create_indexer(
         self, indexer_name: str, datasource_name: str, target_index_name: str
     ):
-        schema_path = "backend\\app\\azure\\schemas\\indexer.json"
+        schema_path = load_file("schemas", "indexer.json")
         with open(schema_path, encoding="utf-8") as fp:
             schema: dict[str, Any] = json.load(fp)
 

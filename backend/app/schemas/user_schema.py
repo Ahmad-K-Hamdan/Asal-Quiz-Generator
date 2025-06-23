@@ -4,6 +4,7 @@ from datetime import datetime
 from app.models.db_models import Category, User
 from app.schemas.category_schema import CategoryOut
 from app.schemas.document_schema import DocumentOut
+from app.schemas.quiz_attempt_schema import QuizAttemptOut
 from app.schemas.quiz_schema import QuizOut
 from pydantic import BaseModel, EmailStr, Field, PositiveInt, field_validator
 
@@ -129,6 +130,7 @@ class UserDetailsResponse(BaseModel):
     categories: list[CategoryOut]
     documents: list[DocumentOut]
     quizzes: list[QuizOut]
+    attempts: list[QuizAttemptOut]
 
     class Config:
         orm_mode = True
@@ -169,4 +171,17 @@ def serializeQuizzes(categories: list[Category]):
         )
         for cat in categories
         for quiz in cat.quizzes
+    ]
+
+
+def serializeAttempts(categories: list[Category]):
+    return [
+        QuizAttemptOut(
+            id=attempt.id,
+            submitted_at=attempt.submitted_at,
+            category_id=attempt.category_id,
+            path=attempt.path,
+        )
+        for cat in categories
+        for attempt in cat.quiz_attempts
     ]

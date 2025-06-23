@@ -17,6 +17,8 @@ class DetailedAnswerItem(BaseModel):
 class QuizAttemptOut(BaseModel):
     id: PositiveInt
     submitted_at: datetime
+    category_id: PositiveInt
+    path: str
 
     class Config:
         from_attributes = True
@@ -25,6 +27,8 @@ class QuizAttemptOut(BaseModel):
 class QuizAttemptDetailOut(BaseModel):
     id: PositiveInt
     submitted_at: datetime
+    category_id: PositiveInt
+    path: str
     answers: list[DetailedAnswerItem]
 
     class Config:

@@ -1,6 +1,6 @@
-import { Quiz } from "../../components/Quizes/Quizes";
+import { Quiz } from "../../components/Quizzes/Quizzes";
 
-export const GetQuizesByCategoryId = async (categoryId:number,setAvailableQuizzes:React.Dispatch<React.SetStateAction<Quiz[]>>) => {
+export const GetQuizzesByCategoryId = async (categoryId:number,setAvailableQuizzes:React.Dispatch<React.SetStateAction<Quiz[]>>) => {
     try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/categories/${categoryId}/quizzes`, {
             method: 'GET',

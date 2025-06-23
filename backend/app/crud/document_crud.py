@@ -74,7 +74,7 @@ class DocumentCrud:
         self.__category(document.category_id)
 
         azure_blob_storage = AzureBlobStorage()
-        azure_blob_storage.delete_blob(document.path)
+        azure_blob_storage.delete_blob(document.path, is_full=True)
 
         self.__db.delete(document)
         self.__db.commit()

@@ -10,11 +10,11 @@ import {
 } from "@fluentui/react-icons";
 import RegenerateQuestionDialog from './RegenerateQuestionDialog';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { RegenerateQuestion } from '../../APIs/Quizes/RegenerateQuestion';
+import { RegenerateQuestion } from '../../APIs/Quizzes/RegenerateQuestion';
 import LoadingDialog from '../Category/LoadingDialog';
-import { SaveQuiz } from '../../APIs/Quizes/SaveQuiz';
-import { StartQuiz } from '../../APIs/Quizes/StartQuiz';
-import { SubmitQuizAttempt } from '../../APIs/Quizes/SubmitQuizAttempt';
+import { SaveQuiz } from '../../APIs/Quizzes/SaveQuiz';
+import { StartQuiz } from '../../APIs/Quizzes/StartQuiz';
+import { SubmitQuizAttempt } from '../../APIs/Quizzes/SubmitQuizAttempt';
 
 const Quiz = () => {
   const {id} = useParams<{id: string}>();
@@ -145,7 +145,7 @@ const navigate = useNavigate();
   }
 
   }
-  function handleGoToQuizes() {
+  function handleGoToQuizzes() {
     // Navigate to the quizzes page
     navigate(`/categories/${id}/quizzes`);
   }
@@ -223,7 +223,7 @@ const navigate = useNavigate();
       {!isFinish ? (!isStart ? 
       <><Btn onClick={handleSaveQuiz}>Save  Quiz</Btn> 
       <Btn onClick={handleStartQuiz}>Start  Quiz</Btn></>
-       : <Btn disabled={Object.keys(selectedAnswers).length !== quiz.length} onClick={handleFinishAttempt}>Finish Attempt</Btn>) : <Btn onClick={handleGoToQuizes}>Go To Quizes</Btn>}
+       : <Btn disabled={Object.keys(selectedAnswers).length !== quiz.length} onClick={handleFinishAttempt}>Finish Attempt</Btn>) : <Btn onClick={handleGoToQuizzes}>Go To Quizzes</Btn>}
       
 
       {openRegenerateDialog && regenerateQuestion && <RegenerateQuestionDialog openRegenerateDialog={openRegenerateDialog} setOpenRegenerateDialog={setOpenRegenerateDialog} questionNumber={regenerateQuestion} regenerateReason={regenerateReason} setRegenerateReason={setRegenerateReason} onRegenerate={handleRegenerateQuestion} />}

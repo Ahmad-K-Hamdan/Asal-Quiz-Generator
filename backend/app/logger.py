@@ -3,7 +3,7 @@ import logging
 from app.config import KeyVault
 from azure.monitor.opentelemetry import configure_azure_monitor
 
-configure_azure_monitor(connection_string=KeyVault.log_connection)
+configure_azure_monitor(connection_string=KeyVault.LOG_CONNECTION)
 
 quiz_logger = logging.getLogger("quiz_logger")
 quiz_logger.setLevel(logging.INFO)

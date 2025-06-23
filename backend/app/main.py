@@ -22,7 +22,9 @@ async def log_requests(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://quiz-generator-frontend-webapp-g3fdawbwbqfjgqbj.eastus-01.azurewebsites.net"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

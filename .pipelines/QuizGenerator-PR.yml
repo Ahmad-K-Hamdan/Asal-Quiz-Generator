@@ -50,32 +50,35 @@ steps:
       $proc = Start-Process "python" -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000" `
                -PassThru `
                -RedirectStandardOutput "stdout.txt" `
-               -RedirectStandardError "stderr.txt" `
-               -NoNewWindow
+               -RedirectStandardError "stderr.txt"
 
-      Start-Sleep -Seconds 7
+      Start-Sleep -Seconds 15
 
       $response = $null
       try {
         $response = Invoke-WebRequest -Uri "http://127.0.0.1:8000/docs" -UseBasicParsing -TimeoutSec 5
       } catch {
-        Write-Error "Failed to connect to backend."
+        Write-Error " Failed to connect to backend."
       }
 
       $stdout = Get-Content "stdout.txt" -Raw
       $stderr = Get-Content "stderr.txt" -Raw
-      Write-Output "----- STDOUT -----`n$stdout"
-      Write-Output "----- STDERR -----`n$stderr"
+
+      Write-Output "========== STDOUT =========="
+      Write-Output $stdout
+      Write-Output "========== STDERR =========="
+      Write-Output $stderr
 
       if ($response -ne $null -and $response.StatusCode -eq 200) {
-        Write-Output "Backend started successfully. Killing process ID $($proc.Id)..."
+        Write-Output " Backend started successfully. Killing process ID $($proc.Id)..."
         Stop-Process -Id $proc.Id -Force
         exit 0
       } else {
-        Write-Error "Backend did not respond properly or failed to start."
+        Write-Error " Backend did not respond properly or failed to start."
         Stop-Process -Id $proc.Id -Force
         exit 1
       }
+
 
 - task: NodeTool@0
   inputs:

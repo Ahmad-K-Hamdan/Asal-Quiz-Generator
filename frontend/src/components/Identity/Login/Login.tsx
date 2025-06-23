@@ -88,8 +88,8 @@ function Login(): JSX.Element {
             </ToggleIcon>
             </PasswordWrapper>
           </Field>
-          <Hint>Doesn't have an account?
-            <Link href='/signup'>Signup</Link>
+          <Hint>Don't have an account?
+            <Link href='/signup'> Signup</Link>
           </Hint>
 
           {error && <ErrorMessage>{error}</ErrorMessage>}

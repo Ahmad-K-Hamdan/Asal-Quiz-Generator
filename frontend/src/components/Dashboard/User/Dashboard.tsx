@@ -141,9 +141,9 @@ export const Basic = (props: Partial<NavDrawerProps>) => {
             Categories
           </NavItem>
 
-          <NavSectionHeader>Quizes</NavSectionHeader>
+          <NavSectionHeader>Quizzes</NavSectionHeader>
           <NavItem icon={<QuizNew20Regular />} value="10">
-            Quizes
+            Quizzes
           </NavItem>
         </NavDrawerBody>
       </NavDrawer>

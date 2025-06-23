@@ -1,16 +1,16 @@
 import json
-import os
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
+from app import constants
+from app.config import KeyVault
+from app.utils.files_loader import load_file
 
 
 class DataSource:
     def __init__(self):
-        load_dotenv()
-        self.__service_name = os.getenv("AZURE_COG_SEARCH_NAME")
-        self.__admin_key = os.getenv("AZURE_COG_SEARCH_ADMIN_KEY")
+        self.__service_name = constants.AZURE_COG_SEARCH_NAME
+        self.__admin_key = KeyVault.AZURE_COG_SEARCH_ADMIN_KEY
         self.__api_version = "2023-10-01-Preview"
 
         if not self.__service_name or not self.__admin_key:
@@ -25,7 +25,7 @@ class DataSource:
         }
 
     def create_datasource(self, datasource_name: str, container_path: str):
-        schema_path: str = "backend\\app\\azure\\schemas\\datasource.json"
+        schema_path = load_file("schemas", "datasource.json")
         with open(schema_path, encoding="utf-8") as fp:
             schema: dict[str, Any] = json.load(fp)
 
@@ -33,7 +33,7 @@ class DataSource:
         schema.setdefault("container", {})
         schema["container"]["name"] = schema["container"].get("name")
         schema["container"]["query"] = container_path
-        schema["credentials"]["connectionString"] = os.getenv("AZURE_SEARCH_DS_CONNSTR")
+        schema["credentials"]["connectionString"] = KeyVault.AZURE_SEARCH_DS_CONNSTR
 
         url = f"{self.__endpoint}/datasources/{datasource_name}"
         resp = requests.put(

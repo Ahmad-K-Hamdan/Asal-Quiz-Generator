@@ -1,18 +1,16 @@
 import json
 from typing import Any
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 from app import constants
 from app.config import KeyVault
+from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContentSettings
-from dotenv import load_dotenv
 from fastapi import HTTPException
 
 
 class AzureBlobStorage:
     def __init__(self):
-        load_dotenv()
-
         self.__account_name = constants.STORAGE_ACCOUNT_NAME
         self.__account_key = KeyVault.STORAGE_ACCOUNT_KEY
         self.__container_name = constants.CONTAINER_NAME
@@ -73,19 +71,24 @@ class AzureBlobStorage:
                 status_code=500, detail="Failed to upload quiz to storage."
             )
 
-    def delete_blob(self, path: str):
+    def delete_blob(self, path: str, is_full: bool = False):
         try:
-            blob_path = path.lstrip("/")
-
-            print(f"Final blob path for deletion: {blob_path}")
+            if is_full:
+                parsed = urlparse(path)
+                container, _, blob_path = parsed.path.lstrip("/").partition("/")
+                if container != self.container_client.container_name:
+                    raise HTTPException(status_code=400, detail="Container mismatch")
+            else:
+                blob_path = path.lstrip("/")
 
             self.container_client.delete_blob(blob_path)
 
+        except ResourceNotFoundError:
+            raise HTTPException(status_code=404, detail="Blob not found")
         except Exception as e:
-            print(f"Error deleting blob '{blob_path}' from Azure:", e)
+            print("Error deleting blob:", e)
             raise HTTPException(
-                status_code=500,
-                detail="Failed to delete file from storage.",
+                status_code=500, detail="Failed to delete file from storage"
             )
 
     def retrieve_blob(self, path: str):

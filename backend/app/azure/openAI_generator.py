@@ -1,22 +1,19 @@
 import json
-import os
 from typing import Any
 
+from app import constants
 from app.azure.search_index import Index
-from dotenv import load_dotenv
+from app.config import KeyVault
+from app.utils.files_loader import load_file
 from openai import AzureOpenAI
 
-load_dotenv()
+AZURE_OPENAI_ENDPOINT = constants.AZURE_OPENAI_ENDPOINT
+AZURE_OPENAI_API_KEY = KeyVault.AZURE_OPENAI_API_KEY
+AZURE_OPENAI_API_VERSION = constants.AZURE_OPENAI_API_VERSION
+AZURE_OPENAI_DEPLOYMENT = constants.AZURE_OPENAI_DEPLOYMENT
 
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-
-SYSTEM_PROMPT_PATH = os.path.join("backend", "app", "azure", "prompts", "system.txt")
-GENERATION_PROMPT_PATH = os.path.join(
-    "backend", "app", "azure", "prompts", "generation.txt"
-)
+SYSTEM_PROMPT_PATH = load_file("prompts", "system.txt")
+GENERATION_PROMPT_PATH = load_file("prompts", "generation.txt")
 
 
 def generate_quiz_from_index(

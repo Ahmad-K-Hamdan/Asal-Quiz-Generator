@@ -21,7 +21,7 @@ import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 import LoadingDialog from "./LoadingDialog";
 import GenerateQuizDialog from "./GenerateQuizDialog";
 import { GetCategoryById } from "../../APIs/Categories/GetCategoryById";
-import { GenerateQuiz } from "../../APIs/Quizes/GenerateQuiz";
+import { GenerateQuiz } from "../../APIs/Quizzes/GenerateQuiz";
 import { QuizQuestion } from "../QuizGenerator/data/quiz";
 
 
@@ -217,8 +217,8 @@ const Category: React.FC = () => {
       <Divider />
 
       <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
-        <Text size={500} weight="semibold">Available Quizes</Text>
-        <Text size={400}>Quizes just created but the user not attempt this</Text>
+        <Text size={500} weight="semibold">Available Quizzes</Text>
+        <Text size={400}>Quizzes just created but the user not attempt this</Text>
         <StyledTable>
           <TableHeader>
             <TableRow>
@@ -237,7 +237,7 @@ const Category: React.FC = () => {
               : documents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>
-                    <Text>No Quizes added yet.</Text>
+                    <Text>No Quizzes added yet.</Text>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -277,8 +277,8 @@ const Category: React.FC = () => {
       </Card>
 
       <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
-        <Text size={500} weight="semibold">Completed Quizes</Text>
-        <Text size={400}>Quizes already finished</Text>
+        <Text size={500} weight="semibold">Completed Quizzes</Text>
+        <Text size={400}>Quizzes already finished</Text>
         <StyledTable>
           <TableHeader>
             <TableRow>
@@ -297,7 +297,7 @@ const Category: React.FC = () => {
               : documents.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>
-                    <Text>No Quizes added yet.</Text>
+                    <Text>No Quizzes added yet.</Text>
                   </TableCell>
                 </TableRow>
               ) : (

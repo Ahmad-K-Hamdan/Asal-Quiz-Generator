@@ -46,7 +46,7 @@ def get_attempt_detail(attempt_id: int, user_id: int = Depends(get_user_id)):
         raise HTTPException(status_code=500, detail="Failed to fetch attempt detail.")
 
 
-@router.post("/attempts", response_model=QuizAttemptOut)
+@router.post("/attempts", response_model=QuizAttemptOut, tags=["quiz_attempts"])
 def submit_quiz_attempt(
     payload: AttemptCreateRequest,
     user_id: int = Depends(get_user_id),
@@ -58,9 +58,7 @@ def submit_quiz_attempt(
                 raise HTTPException(status_code=404, detail="User not found")
 
             crud = QuizAttemptCrud(db)
-            return crud.create_attempt(
-                user_id, payload.answers, user.name, payload.category_id
-            )
+            return crud.create_attempt(payload.answers, user.name, payload.category_id)
 
     except Exception as e:
         print("Error submitting attempt:", e)

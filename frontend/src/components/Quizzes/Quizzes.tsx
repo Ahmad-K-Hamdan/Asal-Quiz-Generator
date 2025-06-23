@@ -6,11 +6,11 @@ import {
   Button,
   Divider,
 } from "@fluentui/react-components";
-import { QuizCard, Section } from './Quizes.styles';
+import { QuizCard, Section } from './Quizzes.styles';
 import { useParams } from 'react-router-dom';
-import { GetQuizesByCategoryId } from '../../APIs/Quizes/GetQuizesByCategoryId';
+import { GetQuizzesByCategoryId } from '../../APIs/Quizzes/GetQuizzesByCategoryId';
 import { Spinner, SpinnerSize } from '@fluentui/react';
-import { GetAttempts } from '../../APIs/Quizes/GetAttempts';
+import { GetAttempts } from '../../APIs/Quizzes/GetAttempts';
 
 export type Quiz = {
   name: string,
@@ -27,7 +27,7 @@ export type QuizAttempt = {
 
 
 
-const Quizes: React.FC = () => {
+const Quizzes: React.FC = () => {
 
   const { id } = useParams<{ id: string }>();
   const [availableQuizzes, setAvailableQuizzes] = React.useState<Quiz[]>([]);
@@ -36,7 +36,7 @@ const Quizes: React.FC = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    GetQuizesByCategoryId(parseInt(id), setAvailableQuizzes)
+    GetQuizzesByCategoryId(parseInt(id), setAvailableQuizzes)
       .finally(() => {
         setLoading(false);
       }
@@ -57,7 +57,7 @@ const Quizes: React.FC = () => {
 
       <Section>
         <Subtitle1>Available Quizzes</Subtitle1>
-        {loading ? <Spinner label="Loading Quizes..." size={SpinnerSize.medium} /> : availableQuizzes.length === 0 ? (
+        {loading ? <Spinner label="Loading Quizzes..." size={SpinnerSize.medium} /> : availableQuizzes.length === 0 ? (
           <Text>No pending quizzes.</Text>
         ) : (
           availableQuizzes.map((quiz) => (
@@ -100,4 +100,4 @@ const Quizes: React.FC = () => {
   );
 };
 
-export default Quizes;
+export default Quizzes;

@@ -104,8 +104,8 @@ function SignUp(): JSX.Element {
               required
             />
           </Field>
-          <Hint>Aleary have an account?
-            <Link href='/login'>Login</Link>
+          <Hint>Already have an account?
+            <Link href='/login'> Login</Link>
           </Hint>
           {error && <ErrorMessage>{error}</ErrorMessage>}
 

@@ -1,4 +1,4 @@
-import { QuizAttempt } from "../../components/Quizes/Quizes";
+import { QuizAttempt } from "../../components/Quizzes/Quizzes";
 
 export const GetAttempts = async (setCompletedQuizzes:React.Dispatch<React.SetStateAction<QuizAttempt[]>>) => {
     try {

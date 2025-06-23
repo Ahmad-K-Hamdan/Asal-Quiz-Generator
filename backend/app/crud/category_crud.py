@@ -43,11 +43,23 @@ class CategoryCrud:
                 status_code=403, detail="Not authorized to delete this category."
             )
 
+        for quiz_attempt in category.quiz_attempts:
+            try:
+                azure_blob_storage.delete_blob(quiz_attempt.path)
+            except Exception as e:
+                print("Warning: Failed to delete attempts", e)
+
         for doc in category.documents:
             try:
-                azure_blob_storage.delete_blob(doc.path)
+                azure_blob_storage.delete_blob(doc.path, is_full=True)
             except Exception as e:
-                print("Warning: Failed to delete blob", e)
+                print("Warning: Failed to delete document", e)
+
+        for quiz in category.quizzes:
+            try:
+                azure_blob_storage.delete_blob(quiz.path, is_full=True)
+            except Exception as e:
+                print("Warning: Failed to delete quiz", e)
 
         self.__db.delete(category)
         self.__db.commit()

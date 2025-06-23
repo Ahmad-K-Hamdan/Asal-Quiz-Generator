@@ -21,9 +21,6 @@ class User(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    quiz_attempts = relationship(
-        "QuizAttempt", back_populates="user", cascade="all, delete-orphan"
-    )
 
 
 class Category(Base):
@@ -42,9 +39,6 @@ class Category(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    quizzes = relationship(
-        "Quiz", back_populates="category", cascade="all, delete-orphan"
-    )
 
     quizzes = relationship(
         "Quiz",
@@ -52,7 +46,13 @@ class Category(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    quiz_attempts = relationship("QuizAttempt", back_populates="category")
+
+    quiz_attempts = relationship(
+        "QuizAttempt",
+        back_populates="category",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class Document(Base):
@@ -87,10 +87,10 @@ class QuizAttempt(Base):
     __tablename__ = "quiz_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    category_id = Column(
+        Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False
+    )
     submitted_at = Column(DateTime, default=datetime.utcnow)
     path = Column(String(512), nullable=False)
 
-    user = relationship("User", back_populates="quiz_attempts")
     category = relationship("Category", back_populates="quiz_attempts")

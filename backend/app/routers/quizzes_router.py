@@ -23,7 +23,7 @@ def get_quizzes_by_category(category_id: int, user_id: int = Depends(get_user_id
     try:
         with SessionLocal() as db:
             quiz_crud = QuizCrud(db=db, user_id=user_id)
-            quizzes = quiz_crud.get_quizzes_by_category(user_id, category_id)
+            quizzes = quiz_crud.get_quizzes_by_category_id(category_id)
 
         return [
             QuizOut(

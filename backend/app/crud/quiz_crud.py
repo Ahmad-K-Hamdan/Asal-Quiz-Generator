@@ -50,7 +50,7 @@ class QuizCrud:
             )
 
         azure_blob_storage = AzureBlobStorage()
-        azure_blob_storage.delete_blob(quiz.path)
+        azure_blob_storage.delete_blob(quiz.path, is_full=True)
 
         self.__db.delete(quiz)
         self.__db.commit()

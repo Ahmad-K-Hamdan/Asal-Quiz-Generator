@@ -22,7 +22,6 @@ class QuizAttemptCrud:
 
     def create_attempt(
         self,
-        user_id: int,
         answers: list[DetailedAnswerItem],
         username: str,
         category_id: int,
@@ -46,7 +45,6 @@ class QuizAttemptCrud:
         blob_service.upload_json(full_attempt, blob_path)
 
         attempt = QuizAttempt(
-            user_id=user_id,
             category_id=category_id,
             submitted_at=datetime.utcnow(),
             path=blob_path,
@@ -55,14 +53,23 @@ class QuizAttemptCrud:
         self.__db.commit()
         self.__db.refresh(attempt)
 
-        return QuizAttemptOut(id=attempt.id, submitted_at=attempt.submitted_at)
+        return QuizAttemptOut(
+            id=attempt.id,
+            submitted_at=attempt.submitted_at,
+            category_id=attempt.category_id,
+            path=attempt.path,
+        )
 
     def get_attempt_details(
         self, attempt_id: int, user_id: int
     ) -> QuizAttemptDetailOut:
         attempt = (
             self.__db.query(QuizAttempt)
-            .filter(QuizAttempt.id == attempt_id, QuizAttempt.user_id == user_id)
+            .join(Category, QuizAttempt.category_id == Category.id)
+            .filter(
+                QuizAttempt.id == attempt_id,
+                Category.user_id == user_id,
+            )
             .first()
         )
 
@@ -80,24 +87,39 @@ class QuizAttemptCrud:
         return QuizAttemptDetailOut(
             id=attempt.id,
             submitted_at=attempt.submitted_at,
+            category_id=attempt.category_id,
+            path=attempt.path,
             answers=[DetailedAnswerItem(**a) for a in data["answers"]],
         )
 
     def get_user_attempts(self, user_id: int, category_id: int) -> list[QuizAttemptOut]:
         attempts = (
             self.__db.query(QuizAttempt)
-            .filter_by(user_id=user_id, category_id=category_id)
-            .order_by(QuizAttempt.submitted_at.desc())
+            .join(Category, QuizAttempt.category_id == Category.id)
+            .filter(
+                Category.user_id == user_id,
+            )
             .all()
         )
+
         return [
-            QuizAttemptOut(id=att.id, submitted_at=att.submitted_at) for att in attempts
+            QuizAttemptOut(
+                id=att.id,
+                submitted_at=att.submitted_at,
+                category_id=att.category_id,
+                path=att.path,
+            )
+            for att in attempts
         ]
 
     def delete_attempt(self, attempt_id: int, user_id: int):
         attempt = (
             self.__db.query(QuizAttempt)
-            .filter(QuizAttempt.id == attempt_id, QuizAttempt.user_id == user_id)
+            .join(Category, QuizAttempt.category_id == Category.id)
+            .filter(
+                QuizAttempt.id == attempt_id,
+                Category.user_id == user_id,
+            )
             .first()
         )
 

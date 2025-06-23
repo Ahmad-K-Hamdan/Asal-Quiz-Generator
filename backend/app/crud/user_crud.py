@@ -4,6 +4,7 @@ from app.models.db_models import Category, User
 from app.schemas.user_schema import (
     LoginResponse,
     UserSignup,
+    serializeAttempts,
     serializeCategories,
     serializeDocuments,
     serializeQuizzes,
@@ -87,6 +88,7 @@ class UserCrud:
                 "categories": serializeCategories(user.categories),
                 "documents": serializeDocuments(user.categories),
                 "quizzes": serializeQuizzes(user.categories),
+                "attempts": serializeAttempts(user.categories),
             }
 
         except SQLAlchemyError as e:

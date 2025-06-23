@@ -10,7 +10,7 @@ import Quiz from './components/QuizGenerator/Quiz';
 import { Basic } from './components/Dashboard/User/Dashboard';
 import {Categories} from './components/Categories/Categories';
 import Category from './components/Category/Category';
-import Quizes from './components/Quizes/Quizes';
+import Quizzes from './components/Quizzes/Quizzes';
 function App() {
   return (
     <Router>
@@ -30,7 +30,7 @@ function App() {
         <Route path='/dashboard' element={<Basic />} />
         <Route path='/categories' element={<Categories />} />
         <Route path='/categories/:id' element={<Category />} />
-        <Route path='/categories/:id/quizzes' element={<Quizes />} />
+        <Route path='/categories/:id/quizzes' element={<Quizzes />} />
       </Routes>
     </Router>
   );
