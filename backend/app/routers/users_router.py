@@ -56,7 +56,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=500, detail="Login failed")
 
 
-@router.get("/user/details/", response_model=UserDetailsResponse, tags=["users"])
+@router.get("/user/details", response_model=UserDetailsResponse, tags=["users"])
 def get_user_details(user_id: int = Depends(get_user_id)):
     try:
         with SessionLocal() as db:
