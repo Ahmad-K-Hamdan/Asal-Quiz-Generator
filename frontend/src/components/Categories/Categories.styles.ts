@@ -1,4 +1,4 @@
-import { Card, Text } from "@fluentui/react-components";
+import { Card, Text, Toast } from "@fluentui/react-components";
 import styled from "styled-components";
 
 export const PaginationContainer = styled.div`
@@ -39,3 +39,14 @@ export const ErrorText = styled(Text)`
     display: block;
    color: #d13438  
 `
+
+export const SuccessToast = styled(Toast)`
+background-color: #4caf50 !important;
+ color: white !important;
+`
+
+export const FailToast = styled(Toast)`
+background-color: #d13438 !important;
+ color: white !important;
+`
+

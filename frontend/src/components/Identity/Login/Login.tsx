@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useContext } from 'react';
 import {
   Field,
   Input,
@@ -23,6 +23,8 @@ import { LoginAPI } from '../../../APIs/Identity/LoginAPI';
 import { ErrorMessage, Hint } from '../SignUp/SignUp.styles';
 import { Eye16Regular, EyeOff16Regular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
+import LoadingDialog from '../../Category/LoadingDialog';
+import { TokenContext } from '../../../context/TokenContext';
 
 type LoginFormData = {
   email: string;
@@ -39,7 +41,9 @@ function Login(): JSX.Element {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loadingDialog, setLoadingDialog] = useState(false);
 
+  const {setToken} = useContext(TokenContext);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
@@ -47,10 +51,15 @@ function Login(): JSX.Element {
     }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    LoginAPI(formData, setError, setSuccess, navigate);
+    setLoadingDialog(true);
+    await LoginAPI(formData,setToken ,setError, setSuccess, navigate)
+    .finally(() => {
+      setLoadingDialog(false);    
+    });
   };
+
 
   return (
     <Container>
@@ -88,8 +97,8 @@ function Login(): JSX.Element {
             </ToggleIcon>
             </PasswordWrapper>
           </Field>
-          <Hint>Don't have an account?
-            <Link href='/signup'> Signup</Link>
+          <Hint>Doesn't have an account?
+            <Link href='/signup'>Signup</Link>
           </Hint>
 
           {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -97,14 +106,17 @@ function Login(): JSX.Element {
           <StyledButton disabled={!formData.email || !formData.password} appearance="primary" type="submit">
             Login
           </StyledButton>
-          {success && <MessageBar intent="success">
-            <MessageBarBody>
+          {success && <MessageBar style={{marginTop: '10px'}} intent="success">
+            <MessageBarBody >
               <MessageBarTitle>Login Successfully!</MessageBarTitle>
             </MessageBarBody>
           </MessageBar>}
 
         </form>
       </FormContainer>
+
+      {loadingDialog && <LoadingDialog loadingDialog={loadingDialog} />}
+      
     </Container>
   );
 }

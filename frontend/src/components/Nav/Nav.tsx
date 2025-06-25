@@ -1,34 +1,14 @@
-import { Button as FluentButton } from '@fluentui/react-components';
-import { Navigation, Logo, LogoImage, NavigationLinks, Link, Identity, Button } from './Nav.styles';
-import logo from '../../assets/images/logo.png';
+
+import { useContext } from 'react';
+import { TokenContext } from '../../context/TokenContext';
+import NavAuth from './NavAuth';
+import NavQuest from './NavQuest';
 
 function Nav() {
+  const {token} = useContext(TokenContext);
   return (
-    <Navigation>
-      <Logo>
-        <LogoImage src={logo} alt="logo" />
-      </Logo>
-
-      <NavigationLinks>
-        <Link href='/'>Home</Link>
-        <Link href='/about'>About Us</Link>
-        <Link href='/contact'>Contact</Link>
-      </NavigationLinks>
-
-      <Identity>
-        <Link href='/signup'>
-          <Button as={FluentButton} appearance="primary">
-            Sign Up
-          </Button>
-        </Link>
-
-        <Link href='/login'>
-          <Button as={FluentButton} appearance="secondary">
-            Login
-          </Button>
-        </Link>
-      </Identity>
-    </Navigation>
+    token ? <NavAuth /> : <NavQuest />
+   
   );
 }
 

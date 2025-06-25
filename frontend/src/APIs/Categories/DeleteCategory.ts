@@ -10,13 +10,13 @@ export const DeleteCategory = async (categoryId:number) => {
             console.log('Response status:', response);
 
             if(response.status === 204) {
-                alert('Category deleted successfully');
+                // alert('Category deleted successfully');
             }
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error during delete category:', error);
             throw error;
         }
 

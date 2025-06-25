@@ -19,7 +19,7 @@ export const GetCategoryById = async (categoryId:number,setCategoryName:React.Di
 
             return data;
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error during get category:', error);
             throw error;
         }
 

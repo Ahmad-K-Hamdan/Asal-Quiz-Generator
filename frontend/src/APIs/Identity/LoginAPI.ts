@@ -1,6 +1,6 @@
 import { NavigateFunction } from "react-router-dom";
 
-export const LoginAPI = async({email, password}:{email:string,password:string}, setError:React.Dispatch<React.SetStateAction<string>>, setSuccess:React.Dispatch<React.SetStateAction<boolean>>,navigate:NavigateFunction) => {
+export const LoginAPI = async({email, password}:{email:string,password:string}, setToken: React.Dispatch<React.SetStateAction<string | null>>, setError:React.Dispatch<React.SetStateAction<string>>, setSuccess:React.Dispatch<React.SetStateAction<boolean>>,navigate:NavigateFunction) => {
     const formData = new URLSearchParams();
     formData.append('grant_type', 'password');
     formData.append('username', email);
@@ -21,6 +21,7 @@ export const LoginAPI = async({email, password}:{email:string,password:string}, 
 
         if (response.ok) {
             localStorage.setItem('token', data.access_token);
+            setToken(data.access_token);
             setSuccess(true);
             setError('');
             setTimeout(() => { 
@@ -35,6 +36,5 @@ export const LoginAPI = async({email, password}:{email:string,password:string}, 
         console.error('Error during login:', error);
         setSuccess(false);
         setError('Invalid email or password');
-        throw error;
     }
 };

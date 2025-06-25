@@ -24,7 +24,7 @@ export const RegenerateQuestion = async (name:string, level:string, reason:strin
         console.log(data);
         return data;
     } catch (error) {
-        console.error('Error during regenerate Question:', error);
+        console.error('Error during regenerate question:', error);
         throw error;
     }
 }

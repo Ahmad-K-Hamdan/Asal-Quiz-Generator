@@ -24,11 +24,12 @@ export const SignUpAPI = async({name,email,password}:{name:string,email:string,p
         setError('');
         setTimeout(() => { 
             window.location.href = '/login'; 
-        }, 1000);
+        }, 2000);
     }
 
     }catch (error) {
         console.error('Error:', error);
         setSuccess(false);
+        setError('Email already exist')
     }
 }

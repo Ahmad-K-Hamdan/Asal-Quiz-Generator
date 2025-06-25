@@ -1,8 +1,7 @@
-import { QuizAttempt } from "../../components/Quizzes/Quizzes";
 
-export const GetAttempts = async (setCompletedQuizzes:React.Dispatch<React.SetStateAction<QuizAttempt[]>>) => {
+export const GetAttemptById = async (attemptId:number) => {
     try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/attempts`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/attempts/${attemptId}`, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
@@ -14,11 +13,10 @@ export const GetAttempts = async (setCompletedQuizzes:React.Dispatch<React.SetSt
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log(data);
-        setCompletedQuizzes(data);
         return data;
     } catch (error) {
-        console.error('Error during get attempts:', error);
+        console.error('Error during get attempt:', error);
         throw error;
+
     }
 }

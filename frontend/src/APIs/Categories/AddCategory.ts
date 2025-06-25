@@ -15,7 +15,7 @@ export const AddCategory = async (category:string) => {
         console.log(response);
 
         if (response.status === 200) {
-            alert("Category added successfully");
+            // alert("Category added successfully");
         }
 
         if (!response.ok) {

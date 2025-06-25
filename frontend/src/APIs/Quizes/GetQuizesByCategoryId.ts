@@ -1,6 +1,6 @@
-import { Quiz } from "../../components/Quizzes/Quizzes";
+import { Quiz } from "../../components/QuizGenerator/data/quiz";
 
-export const GetQuizzesByCategoryId = async (categoryId:number,setAvailableQuizzes:React.Dispatch<React.SetStateAction<Quiz[]>>) => {
+export const GetQuizesByCategoryId = async (categoryId:number,setAvailableQuizzes:React.Dispatch<React.SetStateAction<Quiz[]>>) => {
     try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/categories/${categoryId}/quizzes`, {
             method: 'GET',
@@ -18,7 +18,7 @@ export const GetQuizzesByCategoryId = async (categoryId:number,setAvailableQuizz
         setAvailableQuizzes(data);
         return data;
     } catch (error) {
-        console.error('Error during get quizzes:', error);
+        console.error('Error during get quizes:', error);
         throw error;
     }
 }

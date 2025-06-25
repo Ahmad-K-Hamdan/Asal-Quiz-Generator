@@ -1,6 +1,6 @@
 import { Answer } from "../../components/QuizGenerator/data/quiz";
 
-export const SubmitQuizAttempt = async (answers:Answer[]) => {
+export const SubmitQuizAttempt = async (categoryId:number,answers:Answer[]) => {
     console.log("Submitting quiz attempt with answers:", answers);
     console.log(localStorage.getItem('token'))
     try {
@@ -13,6 +13,7 @@ export const SubmitQuizAttempt = async (answers:Answer[]) => {
 
             },
             body: JSON.stringify({
+                category_id: categoryId,
                 answers: answers
             }),
         });
@@ -24,7 +25,7 @@ export const SubmitQuizAttempt = async (answers:Answer[]) => {
         console.log(data);
         return data;
     } catch (error) {
-        console.error('Error during submit attempts:', error);
+        console.error('Error during submit quiz:', error);
         throw error;
     }
 }

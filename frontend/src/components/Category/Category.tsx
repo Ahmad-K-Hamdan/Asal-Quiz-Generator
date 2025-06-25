@@ -21,8 +21,18 @@ import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 import LoadingDialog from "./LoadingDialog";
 import GenerateQuizDialog from "./GenerateQuizDialog";
 import { GetCategoryById } from "../../APIs/Categories/GetCategoryById";
-import { GenerateQuiz } from "../../APIs/Quizzes/GenerateQuiz";
-import { QuizQuestion } from "../QuizGenerator/data/quiz";
+import { GenerateQuiz } from "../../APIs/Quizes/GenerateQuiz";
+import { Quiz, QuizAttempt, QuizQuestion } from "../QuizGenerator/data/quiz";
+import { GetQuizesByCategoryId } from "../../APIs/Quizes/GetQuizesByCategoryId";
+import { GetAttempts } from "../../APIs/Quizes/GetAttempts";
+import { DeleteQuiz } from "../../APIs/Quizes/DeleteQuiz";
+import { useToastController, Toaster } from '@fluentui/react-components';
+import { FailToast, SuccessToast } from "../Categories/Categories.styles";
+import { DeleteAttempt } from "../../APIs/Quizes/DeleteAttempt";
+import BackButton from "../BackButton";
+import LoadingSpinner from "../LoadingSpinner";
+import NotFound from "../NotFound";
+
 
 
 export type Document = {
@@ -51,13 +61,31 @@ const Category: React.FC = () => {
   const [difficulty, setDifficulty] = React.useState("easy");
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
   const [indexName, setIndexName] = React.useState("");
-  React.useEffect(() => {
+    const [availableQuizzes, setAvailableQuizzes] = React.useState<Quiz[]>([]);
+    const [completedQuizzes, setCompletedQuizzes] = React.useState<QuizAttempt[]>([]);
+   const { dispatchToast } = useToastController();
+   const [notFound , setNotFound]= React.useState(false)
+ 
+    React.useEffect(() => {
     if (!id) return;
-    GetCategoryById(parseInt(id), setCategoryName)
-    GetDocumentsByCategory(parseInt(id), setDocuments)
-      .finally(() => {
-        setLoading(false);
-      })
+    const fetchData = async () => {
+  try {
+    const result = await GetCategoryById(parseInt(id), setCategoryName);
+    if (!result || result === null) {
+      setNotFound(true);
+      return;
+    }
+    await GetDocumentsByCategory(parseInt(id), setDocuments);
+    await GetQuizesByCategoryId(parseInt(id), setAvailableQuizzes);
+    await GetAttempts(parseInt(id), setCompletedQuizzes);
+  } catch (error) {
+    setNotFound(true); 
+  } finally {
+    setLoading(false);
+  }
+};
+    fetchData();
+    
   }, [id]);
   function handleClick() {
     if (inputRef.current) {
@@ -68,9 +96,23 @@ const Category: React.FC = () => {
     const file = event.target.files?.[0];
     if(file){
     setLoadingDialog(true);
-    await UploadDocuments(parseInt(id as string), file).finally(() => {
-      setLoadingDialog(false);
-    });
+    try{
+      await UploadDocuments(parseInt(id as string), file)
+      dispatchToast(
+        <SuccessToast>Document uploaded successfully!</SuccessToast>,
+        { position: 'bottom-end',
+          intent: 'success'
+         }
+      );
+    }catch (error) {
+      dispatchToast(
+        <FailToast>Failed to upload document</FailToast>,
+        { position: 'bottom-end',
+          intent: 'error'
+         }
+      );
+    }finally {
+      setLoadingDialog(false);}
     setLoading(true);
     await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
       setLoading(false);
@@ -97,21 +139,117 @@ const Category: React.FC = () => {
   async function handleDeleteDocument(documentId: number) {
     setConfirmDelete(false);
     setLoadingDialog(true);
+    try{
     await DeleteDocument(documentId)
-      .finally(() => {
-        setLoadingDialog(false);
-      })
+     dispatchToast(
+          <SuccessToast>Document Deleted successfully!</SuccessToast>,
+          { position: 'bottom-end',
+            intent: 'success',
+           }
+        );
+
+    }catch (error) {
+      dispatchToast(
+          <FailToast>Failed to delete category</FailToast>,
+          { position: 'bottom-end',
+            intent: 'error'
+           }
+        );
+
+    }
+    finally {
+      setLoadingDialog(false);
+    }
     setLoading(true);
     await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
       setLoading(false);
     });
   }
+  function handleStartQuiz(quizId:number){
+    navigate(`/categories/${id}/quizzes/${quizId}`,{
+      state:{
+        state:'start'
+      }
+    })
 
-  //this will changed later
-  if (!categoryName) return <Text>Loading category...</Text>;
+  }
+  function handleViewQuiz(quizId:number){
+    navigate(`/categories/${id}/quizzes/${quizId}`,{
+      state:{
+        state:'view'
+      }
+    }) 
+  }
+  async function handleDeleteQuiz(quizId:number){
+    setLoadingDialog(true)
+    try{
+      await DeleteQuiz(quizId)
+      dispatchToast(
+        <SuccessToast>Quiz Deleted successfully!</SuccessToast>,
+        { position: 'bottom-end',
+          intent: 'success',
+         }
+      );
+    }
+    catch (error) {
+      dispatchToast(
+        <FailToast>Failed to delete quiz</FailToast>,
+        { position: 'bottom-end',
+          intent: 'error'
+         }
+      );
+    }finally {
+      setLoadingDialog(false);  
+    }
+    if (!id) return;
+    setLoadingDialog(true)
+    await GetQuizesByCategoryId(parseInt(id),setAvailableQuizzes)
+    .finally(() => {
+      setLoadingDialog(false);
+    })
+
+  }
+  function handleViewAttempt(categoryId:number,attemptId:number){
+    navigate(`/categories/${categoryId}/attempts/${attemptId}`)
+  }
+  function handleDeleteAttempt(attemptId:number){
+    setLoadingDialog(true)  
+    DeleteAttempt(attemptId)
+      .then(() => {
+        dispatchToast(
+          <SuccessToast>Attempt Deleted successfully!</SuccessToast>,
+          { position: 'bottom-end',
+            intent: 'success',
+           }
+        );
+      })
+      .catch(() => {
+        dispatchToast(
+          <FailToast>Failed to delete attempt</FailToast>,
+          { position: 'bottom-end',
+            intent: 'error'
+           }
+        );
+      })
+      .finally(() => {
+        setLoadingDialog(false);
+        if (!id) return;
+        setLoadingDialog(true)
+        GetAttempts(parseInt(id),setCompletedQuizzes)
+        .finally(() => {
+          setLoadingDialog(false);
+        })
+      });
+  }
+
+  if(notFound){
+    return <NotFound />
+  }
+  if (!categoryName) return <LoadingSpinner label="Loading category..." />;
 
   return (
     <PageWrapper>
+      <BackButton />
       {isGeneratingQuiz || isGeneratedQuiz ? (
         <Container>
           <Card>
@@ -122,6 +260,10 @@ const Category: React.FC = () => {
           <Card>
             <Text size={500} weight="semibold">
               {isGeneratingQuiz ? "Generating your quiz..." : "The quiz is ready!"}
+              {isGeneratingQuiz && <Spinner style={{ marginLeft: '10px' }} size={SpinnerSize.small} />}
+              {
+                isGeneratingQuiz && "may take a few seconds" 
+              }
             </Text>
             {isGeneratedQuiz && (
               <ButtonsContainer>
@@ -217,8 +359,8 @@ const Category: React.FC = () => {
       <Divider />
 
       <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
-        <Text size={500} weight="semibold">Available Quizzes</Text>
-        <Text size={400}>Quizzes just created but the user not attempt this</Text>
+        <Text size={500} weight="semibold">Available Quizes</Text>
+        <Text size={400}>Quizes just created but the user not attempt this</Text>
         <StyledTable>
           <TableHeader>
             <TableRow>
@@ -231,40 +373,40 @@ const Category: React.FC = () => {
             {loading ?
               <TableRow>
                 <TableCell colSpan={3}>
-                  <Spinner style={{ padding: '10px' }} label="Loading documents..." size={SpinnerSize.medium} />
+                  <Spinner style={{ padding: '10px' }} label="Loading quizzes..." size={SpinnerSize.medium} />
                 </TableCell>
               </TableRow>
-              : documents.length === 0 ? (
+              : availableQuizzes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>
-                    <Text>No Quizzes added yet.</Text>
+                    <Text>No Quizes added yet.</Text>
                   </TableCell>
                 </TableRow>
               ) : (
-                documents.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>{doc.id}</TableCell>
-                    <TableCell>{doc.name}</TableCell>
+                availableQuizzes.map((q) => (
+                  <TableRow key={q.id}>
+                    <TableCell>{q.id}</TableCell>
+                    <TableCell>{q.name}</TableCell>
                     <TableCell>
                       <QuizActions>
                         <Button
                           appearance="primary"
                           title="View Quiz"
                           icon={<Eye20Regular />}
-                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                          onClick={() => handleViewQuiz(q.id)}
                         />
 
                         <Button
                           appearance="primary"
                           title="Start Quiz"
                           icon={<Play20Regular />}
-                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                          onClick={() => handleStartQuiz(q.id)}
                         />
 
                         <DeleteButton
                           title="Delete Quiz"
                           icon={<Delete20Regular />}
-                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                          onClick={() => handleDeleteQuiz(q.id)}
                         />
                       </QuizActions>
                     </TableCell>
@@ -277,13 +419,12 @@ const Category: React.FC = () => {
       </Card>
 
       <Card style={{ margin: '24px', borderRadius: '10px', padding: '24px' }}>
-        <Text size={500} weight="semibold">Completed Quizzes</Text>
-        <Text size={400}>Quizzes already finished</Text>
+        <Text size={500} weight="semibold">Completed Quizes</Text>
+        <Text size={400}>Quizes already finished</Text>
         <StyledTable>
           <TableHeader>
             <TableRow>
               <TableHeaderCell>#</TableHeaderCell>
-              <TableHeaderCell>Quiz Name</TableHeaderCell>
               <TableHeaderCell>Actions</TableHeaderCell>
             </TableRow>
           </TableHeader>
@@ -291,33 +432,32 @@ const Category: React.FC = () => {
             {loading ?
               <TableRow>
                 <TableCell colSpan={3}>
-                  <Spinner style={{ padding: '10px' }} label="Loading documents..." size={SpinnerSize.medium} />
+                  <Spinner style={{ padding: '10px' }} label="Loading attempts..." size={SpinnerSize.medium} />
                 </TableCell>
               </TableRow>
-              : documents.length === 0 ? (
+              : completedQuizzes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>
-                    <Text>No Quizzes added yet.</Text>
+                    <Text>No Quizes added yet.</Text>
                   </TableCell>
                 </TableRow>
               ) : (
-                documents.map((doc) => (
+                completedQuizzes.map((doc) => (
                   <TableRow key={doc.id}>
                     <TableCell>{doc.id}</TableCell>
-                    <TableCell>{doc.name}</TableCell>
                     <TableCell>
                       <QuizActions>
                         <Button
                           title="View Quiz"
                           appearance="primary"
                           icon={<Eye20Regular />}
-                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                          onClick={() => handleViewAttempt(doc.category_id,doc.id)}
                         />
 
                         <DeleteButton
                           title="Delete Quiz"
                           icon={<Delete20Regular />}
-                          onClick={() => handleOpenConfirmDelete(doc.id)}
+                          onClick={() => handleDeleteAttempt(doc.id)}
                         />
                       </QuizActions>
                     </TableCell>
@@ -335,6 +475,7 @@ const Category: React.FC = () => {
 
       {confirmDelete && selectedDocumentId && <ConfirmDeleteDialog documentId={selectedDocumentId} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} onDeleteDocument={handleDeleteDocument} />}
 
+      <Toaster />
     </PageWrapper>
   );
 };

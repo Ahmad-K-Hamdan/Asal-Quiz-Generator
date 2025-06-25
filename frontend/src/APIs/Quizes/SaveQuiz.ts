@@ -25,7 +25,7 @@ export const SaveQuiz = async (categoryId:number,quizName:string,difficulty:stri
         console.log(data);
         return data;
     } catch (error) {
-        console.error('Error during save Quiz:', error);
+        console.error('Error during save quiz:', error);
         throw error;
     }
 }

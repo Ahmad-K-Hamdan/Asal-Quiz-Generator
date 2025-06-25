@@ -11,11 +11,11 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import logo from '../../../assets/images/logo.png';
 import { Container, LogoSection, FormContainer, Title, StyledLabel, StyledButton, ErrorMessage, Hint } from './SignUp.styles';
 import { SignUpAPI } from '../../../APIs/Identity/SignUpAPI';
+import LoadingDialog from '../../Category/LoadingDialog';
 type FormData = {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string
 }
 function SignUp(): JSX.Element {
 
@@ -23,11 +23,15 @@ function SignUp(): JSX.Element {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
   });
 
+  const [validationError, setValidationError] = useState({
+    name:'',
+    password:''
+  })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [loadingDialog, setLoadingDialog] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -37,32 +41,51 @@ function SignUp(): JSX.Element {
   };
   const validatePassword = (password: string) => {
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long')
+      setValidationError({...validationError, password:'Password must be at least 8 characters long'})
     } else if (!/[A-Z]/.test(password)) {
-      setError('Password must contain at least one uppercase letter')
+      setValidationError({...validationError, password:'Password must contain at least one uppercase letter'})
     } else if (!/[a-z]/.test(password)) {
-      setError('Password must contain at least one lowercase letter')
+      setValidationError({...validationError, password:'Password must contain at least one lowercase letter'})
     }
     else if (!/[0-9]/.test(password)) {
-      setError('Password must contain at least one Digit')
+      setValidationError({...validationError, password:'Password must contain at least one Digit'})
     }
     else if (!/[!@#$%^&*]/.test(password)) {
-      setError('Password must contain at least one special character')
+      setValidationError({...validationError, password:'Password must contain at least one special character'})
     }
     else {
-      setError('')
+      setValidationError({...validationError, password:''})
     }
   }
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const validateName = (name: string) => {
+    if (name.length < 3) {
+      setValidationError({...validationError, name:'Name must be at least 3 characters long'})
+    } else if (/[!@#$%^&*]/.test(name)) {
+      setValidationError({...validationError, name:'Name must contain characters and numbers only'})
+    }
+    else {
+      setValidationError({...validationError, name:''})
+    }
+  }
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    SignUpAPI(formData, setError, setSuccess)
+    console.log(formData);
+    setLoadingDialog(true);
+    await SignUpAPI(formData, setError, setSuccess)
+    .finally(() => {
+      setLoadingDialog(false);
+    });
   }
   useEffect(() => {
     if (formData.password) {
       validatePassword(formData.password)
     }
-
   }, [formData.password])
+    useEffect(() => {
+    if (formData.name) {
+      validateName(formData.name)
+    }
+  }, [formData.name])
 
   return (
     <Container>
@@ -83,6 +106,7 @@ function SignUp(): JSX.Element {
               required
             />
           </Field>
+           {validationError.name && <ErrorMessage>{validationError.name}</ErrorMessage>}
 
           <Field label={<StyledLabel>Email</StyledLabel>}>
             <Input
@@ -104,21 +128,23 @@ function SignUp(): JSX.Element {
               required
             />
           </Field>
-          <Hint>Already have an account?
-            <Link href='/login'> Login</Link>
+          <Hint>Aleary have an account?
+            <Link href='/login'>Login</Link>
           </Hint>
+          {validationError.password && <ErrorMessage>{validationError.password}</ErrorMessage>}
           {error && <ErrorMessage>{error}</ErrorMessage>}
 
-          <StyledButton appearance="primary" type="submit" disabled={!formData.name || !formData.email || !formData.password || Boolean(error)}>
+          <StyledButton appearance="primary" type="submit" disabled={!formData.name || !formData.email || !formData.password || Boolean(validationError.password) ||Boolean(validationError.name) ||Boolean(error)}>
             Sign Up
           </StyledButton>
-          {success && <MessageBar intent="success">
+          {success && <MessageBar style={{marginTop: '10px'}} intent="success">
             <MessageBarBody>
               <MessageBarTitle>Sign Up Successfully!</MessageBarTitle>
             </MessageBarBody>
           </MessageBar>}
         </form>
       </FormContainer>
+      { loadingDialog && <LoadingDialog loadingDialog={loadingDialog} /> }
     </Container>
   );
 }

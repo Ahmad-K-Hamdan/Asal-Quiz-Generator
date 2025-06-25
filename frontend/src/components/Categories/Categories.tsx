@@ -24,11 +24,13 @@ import {
 } from "@fluentui/react-components";
 import { Link, Spinner, SpinnerSize } from "@fluentui/react";
 import { Pagination } from "./Pagination";
-import { ActionsCell, Container, ErrorText, Header, StyledCard, Toolbar } from "./Categories.styles";
+import { ActionsCell, Container, ErrorText, FailToast, Header, StyledCard, SuccessToast, Toolbar } from "./Categories.styles";
 import { GetAllCategories } from "../../APIs/Categories/GetAllCategories";
 import { DeleteCategory } from "../../APIs/Categories/DeleteCategory";
 import { AddCategory } from "../../APIs/Categories/AddCategory";
 import LoadingDialog from "../Category/LoadingDialog";
+import { useToastController, Toaster } from '@fluentui/react-components';
+import BackButton from "../BackButton";
 
 
 export type Category = {
@@ -43,6 +45,7 @@ export const Categories = () => {
   const [error, setError] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(true);
   const [loadingDialog, setLoadingDialog] = React.useState<boolean>(false);
+  const { dispatchToast } = useToastController();
   React.useEffect(() => {
     GetAllCategories(setCategoriesList)
       .finally(() => {
@@ -74,10 +77,26 @@ export const Categories = () => {
 
   const handleDeleteCategory = async (id: number) => {
     setLoadingDialog(true);
-    await DeleteCategory(id)
-      .finally(() => {
-        setLoadingDialog(false);
-      })
+    try{
+       await DeleteCategory(id)
+        dispatchToast(
+      <SuccessToast>Category Deleted successfully!</SuccessToast>,
+      { position: 'bottom-end',
+        intent: 'success',
+       }
+    );
+    }catch (error) {
+       dispatchToast(
+      <FailToast>Failed to delete category</FailToast>,
+      { position: 'bottom-end',
+        intent: 'error'
+       }
+    );
+    }
+    finally {
+      setLoadingDialog(false);
+    }
+   
     setLoading(true);
     await GetAllCategories(setCategoriesList)
       .finally(() => {
@@ -89,10 +108,26 @@ export const Categories = () => {
     setNewCategoryName("");
     setAddDialogOpen(false);
     setLoadingDialog(true);
-    await AddCategory(newCategoryName)
-      .finally(() => {
-        setLoadingDialog(false);
-      })
+     try {
+    await AddCategory(newCategoryName);
+    dispatchToast(
+      <SuccessToast>Category added successfully!</SuccessToast>,
+      { position: 'bottom-end',
+        intent: 'success',
+        
+       }
+    );
+  } catch (error) {
+    dispatchToast(
+      <FailToast>Failed to add category</FailToast>,
+      { position: 'bottom-end',
+        intent: 'error'
+       }
+    );
+  } finally {
+    setLoadingDialog(false);
+  }
+
     setLoading(true);
     await GetAllCategories(setCategoriesList)
       .finally(() => {
@@ -102,6 +137,7 @@ export const Categories = () => {
 
   return (
     <Container>
+      <BackButton />
       <Header>
         <Text weight="bold" size={700}>Categories</Text>
       </Header>
@@ -193,6 +229,7 @@ export const Categories = () => {
           </DialogBody>
         </DialogSurface>
       </Dialog>
+      <Toaster />
     </Container>
   );
 };

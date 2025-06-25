@@ -1,8 +1,8 @@
-import { QuizAttempt } from "../../components/Quizzes/Quizzes";
+import { QuizAttempt } from "../../components/QuizGenerator/data/quiz";
 
-export const GetAttempts = async (setCompletedQuizzes:React.Dispatch<React.SetStateAction<QuizAttempt[]>>) => {
+export const GetAttempts = async (id:number,setCompletedQuizzes:React.Dispatch<React.SetStateAction<QuizAttempt[]>>) => {
     try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/attempts`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/attempts?category_id=${id}`, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',

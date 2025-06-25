@@ -5,32 +5,84 @@ import HowItWorks from './components/HowItWorks/HowItWorks';
 import Login from './components/Identity/Login/Login';
 import SignUp from './components/Identity/SignUp/SignUp';
 import Nav from './components/Nav/Nav';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Quiz from './components/QuizGenerator/Quiz';
 import { Basic } from './components/Dashboard/User/Dashboard';
 import {Categories} from './components/Categories/Categories';
 import Category from './components/Category/Category';
-import Quizzes from './components/Quizzes/Quizzes';
+import AvailableQuiz from './components/Quizes/AvailableQuiz';
+import Attempt from './components/Quizes/Attempt';
+import { useContext, useEffect } from 'react';
+import { TokenContext } from './context/TokenContext';
+import ProtectedRoute from './authorization/ProtectedRoute';
+import NotFound from './components/NotFound';
 function App() {
+  const {token,setToken} = useContext(TokenContext);
+  
+       useEffect(() => {
+      const handleStorageChange = (event:StorageEvent) => {
+        if (event.key === 'token' && !event.newValue) {
+          handleLogout();
+        }
+      };
+  
+      window.addEventListener('storage', handleStorageChange);
+  
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
+    }, []);
+
+     const handleLogout = () => {
+      localStorage.removeItem('token');
+      setToken('');
+    };
+
   return (
     <Router>
+      <Nav />
       <Routes>
         <Route path="/" element={
           <>
-            <Nav />
             <Hero />
             <HowItWorks />
             <Features />
             <Footer />
           </>
         } />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path='categories/:id/view-quiz' element={<Quiz />} />
-        <Route path='/dashboard' element={<Basic />} />
-        <Route path='/categories' element={<Categories />} />
-        <Route path='/categories/:id' element={<Category />} />
-        <Route path='/categories/:id/quizzes' element={<Quizzes />} />
+        <Route path="/signup" element={!token ? <SignUp /> :<Navigate to='/dashboard' />} />
+        <Route path="/login" element={!token ? <Login /> : <Navigate to='/dashboard' />} />
+        <Route path='categories/:id/view-quiz' element={
+          <ProtectedRoute>
+          <Quiz />
+          </ProtectedRoute>
+          } />
+        <Route path='/dashboard' element={
+          <ProtectedRoute>
+            <Basic /> 
+          </ProtectedRoute>
+          } />
+        <Route path='/categories' element={
+          <ProtectedRoute>
+            <Categories />      
+          </ProtectedRoute>
+          } />
+        <Route path='/categories/:id' element={
+          <ProtectedRoute>
+            <Category />
+          </ProtectedRoute>
+          } />
+        <Route path='/categories/:categoryId/quizzes/:quizId' element={
+          <ProtectedRoute>
+            <AvailableQuiz /> 
+          </ProtectedRoute>
+          } />
+        <Route path='/categories/:categoryId/attempts/:attemptId' element={
+          <ProtectedRoute>
+            <Attempt /> 
+          </ProtectedRoute>
+          } />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

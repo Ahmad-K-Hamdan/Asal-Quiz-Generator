@@ -11,8 +11,10 @@ import {
   HeroImageWrapper,
   HeroImage
 } from './Hero.styles';
+import { useNavigate } from 'react-router-dom';
 
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <HeroSection>
       <HeroText>
@@ -21,7 +23,7 @@ const Hero: React.FC = () => {
           Upload your materials and let AI create engaging questions for you. Ideal for teachers, trainers, and students.
         </HeroParagraph>
         <HeroButtons>
-          <PrimaryButton>Get Started</PrimaryButton>
+          <PrimaryButton onClick={()=>navigate('/dashboard')}>Get Started</PrimaryButton>
           <SecondaryButton>Learn More</SecondaryButton>
         </HeroButtons>
       </HeroText>

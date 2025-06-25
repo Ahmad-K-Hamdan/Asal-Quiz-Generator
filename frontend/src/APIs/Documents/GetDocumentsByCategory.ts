@@ -22,7 +22,7 @@ export const GetDocumentsByCategory = async (categoryId:number,setDocuments:Reac
             }
             return data;
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error during get document:', error);
             throw error;
         }
 }

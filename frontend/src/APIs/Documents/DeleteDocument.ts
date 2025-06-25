@@ -10,14 +10,14 @@ export const DeleteDocument = async (documentId:number) => {
             console.log('Response status:', response);
 
             if(response.status === 204) {
-                alert('Document deleted successfully');
+                // alert('Document deleted successfully');
             }
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
 
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error during delete document:', error);
 
             throw error;
         }

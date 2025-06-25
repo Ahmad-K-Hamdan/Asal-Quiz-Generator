@@ -13,7 +13,7 @@ export const UploadDocuments = async (categoryId:number,file:File) => {
             console.log(response);  
 
             if(response.status === 200) {
-                alert("Document uploaded successfully");
+                // alert("Document uploaded successfully");
                 
             }
             if (!response.ok) {
@@ -23,7 +23,7 @@ export const UploadDocuments = async (categoryId:number,file:File) => {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error during upload document:', error);
 
             throw error;
         }
