@@ -93,12 +93,21 @@ class QuizAttemptCrud:
         )
 
     def get_user_attempts(self, user_id: int, category_id: int) -> list[QuizAttemptOut]:
+        category = (
+            self.__db.query(Category)
+            .filter(Category.id == category_id, Category.user_id == user_id)
+            .first()
+        )
+
+        if not category:
+            raise HTTPException(
+                status_code=403,
+                detail="This category does not belong to the current user.",
+            )
         attempts = (
             self.__db.query(QuizAttempt)
             .join(Category, QuizAttempt.category_id == Category.id)
-            .filter(
-                Category.user_id == user_id,
-            )
+            .filter(Category.user_id == user_id, QuizAttempt.category_id == category_id)
             .all()
         )
 
