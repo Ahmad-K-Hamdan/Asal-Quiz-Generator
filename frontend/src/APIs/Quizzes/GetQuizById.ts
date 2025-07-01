@@ -1,20 +1,18 @@
 import { QuizInfo, QuizQuestion } from "../../components/QuizGenerator/data/quiz";
 
-export const GetQuizById = async (categoryId: number, quizId: number, setQuiz: React.Dispatch<React.SetStateAction<QuizInfo | null>>, setQuestions: React.Dispatch<React.SetStateAction<QuizQuestion[]>>) => {
+export const GetQuizById = async (apiFetch: ReturnType<typeof import("../../hooks/useApi").useApi>, categoryId: number, quizId: number, setQuiz: React.Dispatch<React.SetStateAction<QuizInfo | null>>, setQuestions: React.Dispatch<React.SetStateAction<QuizQuestion[]>>) => {
     try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/categories/{category_id}/quizzes/${quizId}`, {
+        const response = await apiFetch(`${process.env.REACT_APP_API_URL}/categories/{category_id}/quizzes/${quizId}`, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
         });
-
-        if (!response.ok) {
+        if(response){
+            if (!response?.ok) {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log(data);
 
         const quiz: QuizInfo = {
             id: data.id,
@@ -29,6 +27,9 @@ export const GetQuizById = async (categoryId: number, quizId: number, setQuiz: R
         setQuiz(quiz);
         setQuestions(data.questions)
         return data;
+
+        }
+        
     } catch (error) {
         console.error('Error during get quiz:', error);
         throw error;

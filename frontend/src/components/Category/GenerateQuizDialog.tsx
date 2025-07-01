@@ -13,10 +13,11 @@ function GenerateQuizDialog({ categoryId, isOpenGenerateDialog, setIsOpenGenerat
             defaultSelectedOptions={['easy']}
             placeholder="Select difficulty"
             value={difficulty}
-            onOptionSelect={(e, data) =>{
-              if(data.optionValue) {
-              setDifficulty(data.optionValue)
-              }}
+            onOptionSelect={(e, data) => {
+              if (data.optionValue) {
+                setDifficulty(data.optionValue)
+              }
+            }
             }
           >
             <Option value="easy">Easy</Option>

@@ -1,4 +1,5 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { NavLink as RouterLink } from 'react-router-dom';
 
 export const Navigation = styled.nav`
   display: flex;
@@ -22,6 +23,7 @@ export const Logo = styled.div`
 export const LogoImage = styled.img`
   height: 50px;
   width: 50px;
+  cursor: pointer;
 
     @media (max-width: 768px) {
     height: 40px;
@@ -37,7 +39,7 @@ export const NavigationLinks = styled.div`
   }
 `;
 
-export const Link = styled.a`
+const linkStyles = css`
   font-weight: 500;
   font-size: 16px;
   color: white;
@@ -48,6 +50,17 @@ export const Link = styled.a`
     transform: scale(1.1);
     color: #4fc3f7;
     cursor: pointer;
+  }
+`;
+
+export const Link = styled.a`
+  ${linkStyles}
+`;
+
+export const StyledNavLink = styled(RouterLink)`
+  ${linkStyles}
+   &.active {
+    color: #0078d4;
   }
 `;
 
@@ -71,3 +84,4 @@ export const Button = styled.button`
     cursor: pointer;
   }
 `;
+

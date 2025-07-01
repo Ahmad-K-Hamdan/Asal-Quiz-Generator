@@ -3,7 +3,7 @@ import {
   Button,
   LargeTitle,
   Text,
-} from '@fluentui/react-components'; 
+} from '@fluentui/react-components';
 export const Container = styled.div`
     display: flex;
     flex-direction: column;
@@ -52,7 +52,7 @@ export const ErrorMessage = styled(Text)`
   margin-top: 0.5rem;
   display: block;
 `;
-export const Hint= styled(Text)`
+export const Hint = styled(Text)`
   margin-top: 0.5rem;
   display: block;
   text-align: end;

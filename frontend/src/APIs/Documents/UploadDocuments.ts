@@ -10,12 +10,7 @@ export const UploadDocuments = async (categoryId:number,file:File) => {
                 },
                 body: formData,
             });
-            console.log(response);  
 
-            if(response.status === 200) {
-                // alert("Document uploaded successfully");
-                
-            }
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

@@ -30,7 +30,8 @@ import { DeleteCategory } from "../../APIs/Categories/DeleteCategory";
 import { AddCategory } from "../../APIs/Categories/AddCategory";
 import LoadingDialog from "../Category/LoadingDialog";
 import { useToastController, Toaster } from '@fluentui/react-components';
-import BackButton from "../BackButton";
+import BackContainer from "../BackContainer";
+import { useApi } from "../../hooks/useApi";
 
 
 export type Category = {
@@ -45,9 +46,22 @@ export const Categories = () => {
   const [error, setError] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(true);
   const [loadingDialog, setLoadingDialog] = React.useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [filteredCategories, setFilteredCategories] = React.useState<Category[]>([])
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage
+  const end = currentPage * itemsPerPage
   const { dispatchToast } = useToastController();
+  const apiFetch = useApi()
+
   React.useEffect(() => {
-    GetAllCategories(setCategoriesList)
+    GetAllCategories(apiFetch, setCategoriesList)
+      .then((data) => {
+        setFilteredCategories(data.categories)
+      })
       .finally(() => {
         setLoading(false);
       })
@@ -66,39 +80,52 @@ export const Categories = () => {
       }
     }
   }, [newCategoryName])
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(categoriesList.length / itemsPerPage);
-  const start = (currentPage - 1) * itemsPerPage
-  const end = currentPage * itemsPerPage
+
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm.trim() === '') {
+        setFilteredCategories(categoriesList);
+      } else {
+        const filtered = categoriesList.filter(cat =>
+          cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredCategories(filtered);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
 
 
   const handleDeleteCategory = async (id: number) => {
     setLoadingDialog(true);
-    try{
-       await DeleteCategory(id)
-        dispatchToast(
-      <SuccessToast>Category Deleted successfully!</SuccessToast>,
-      { position: 'bottom-end',
-        intent: 'success',
-       }
-    );
-    }catch (error) {
-       dispatchToast(
-      <FailToast>Failed to delete category</FailToast>,
-      { position: 'bottom-end',
-        intent: 'error'
-       }
-    );
+    try {
+      await DeleteCategory(apiFetch, id)
+      dispatchToast(
+        <SuccessToast>Category Deleted successfully!</SuccessToast>,
+        {
+          position: 'bottom-end',
+          intent: 'success',
+        }
+      );
+    } catch (error) {
+      dispatchToast(
+        <FailToast>Failed to delete category</FailToast>,
+        {
+          position: 'bottom-end',
+          intent: 'error'
+        }
+      );
     }
     finally {
       setLoadingDialog(false);
     }
-   
     setLoading(true);
-    await GetAllCategories(setCategoriesList)
+    await GetAllCategories(apiFetch, setCategoriesList)
+      .then((data) => {
+        setFilteredCategories(data.categories)
+      })
       .finally(() => {
         setLoading(false);
       })
@@ -108,28 +135,33 @@ export const Categories = () => {
     setNewCategoryName("");
     setAddDialogOpen(false);
     setLoadingDialog(true);
-     try {
-    await AddCategory(newCategoryName);
-    dispatchToast(
-      <SuccessToast>Category added successfully!</SuccessToast>,
-      { position: 'bottom-end',
-        intent: 'success',
-        
-       }
-    );
-  } catch (error) {
-    dispatchToast(
-      <FailToast>Failed to add category</FailToast>,
-      { position: 'bottom-end',
-        intent: 'error'
-       }
-    );
-  } finally {
-    setLoadingDialog(false);
-  }
+    try {
+      await AddCategory(apiFetch, newCategoryName);
+      dispatchToast(
+        <SuccessToast>Category added successfully!</SuccessToast>,
+        {
+          position: 'bottom-end',
+          intent: 'success',
+
+        }
+      );
+    } catch (error) {
+      dispatchToast(
+        <FailToast>Failed to add category</FailToast>,
+        {
+          position: 'bottom-end',
+          intent: 'error'
+        }
+      );
+    } finally {
+      setLoadingDialog(false);
+    }
 
     setLoading(true);
-    await GetAllCategories(setCategoriesList)
+    await GetAllCategories(apiFetch, setCategoriesList)
+      .then((data) => {
+        setFilteredCategories(data.categories)
+      })
       .finally(() => {
         setLoading(false);
       });
@@ -137,7 +169,7 @@ export const Categories = () => {
 
   return (
     <Container>
-      <BackButton />
+      <BackContainer />
       <Header>
         <Text weight="bold" size={700}>Categories</Text>
       </Header>
@@ -158,7 +190,7 @@ export const Categories = () => {
 
         {loading ? (
           <Spinner label="Loading categories..." size={SpinnerSize.medium} />
-        ) : categoriesList.length === 0 ? (
+        ) : filteredCategories.length === 0 ? (
           <Text>No categories found.</Text>
         ) : (
           <Table aria-label="Styled categories table" style={{ width: "100%" }}>
@@ -169,7 +201,7 @@ export const Categories = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categoriesList.slice(start, end).map((category) => (
+              {filteredCategories.slice(start, end).map((category) => (
                 <TableRow key={category.id}>
                   <TableCell>
                     <TableCellLayout>

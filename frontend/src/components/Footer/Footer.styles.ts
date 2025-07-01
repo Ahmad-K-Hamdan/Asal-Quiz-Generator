@@ -31,3 +31,25 @@ export const FooterListItem = styled.li`
     color: #00bfff;
   }
 `;
+export const FooterSections = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 32px;
+`;
+
+export const FooterSection = styled.div`
+  max-width: 250px;
+  text-align: left;
+`;
+
+export const FooterHeading = styled.p`
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+`;
+
+export const FooterParagraph = styled.p`
+  font-size: 14px;
+  margin: 4px 0; 
+`;

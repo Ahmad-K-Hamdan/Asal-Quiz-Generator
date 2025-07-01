@@ -21,17 +21,18 @@ import ConfirmDeleteDialog from "./ConfirmDeleteDialog";
 import LoadingDialog from "./LoadingDialog";
 import GenerateQuizDialog from "./GenerateQuizDialog";
 import { GetCategoryById } from "../../APIs/Categories/GetCategoryById";
-import { GenerateQuiz } from "../../APIs/Quizes/GenerateQuiz";
+import { GenerateQuiz } from "../../APIs/Quizzes/GenerateQuiz";
 import { Quiz, QuizAttempt, QuizQuestion } from "../QuizGenerator/data/quiz";
-import { GetQuizesByCategoryId } from "../../APIs/Quizes/GetQuizesByCategoryId";
-import { GetAttempts } from "../../APIs/Quizes/GetAttempts";
-import { DeleteQuiz } from "../../APIs/Quizes/DeleteQuiz";
+import { GetQuizzesByCategoryId } from "../../APIs/Quizzes/GetQuizzesByCategoryId";
+import { GetAttempts } from "../../APIs/Quizzes/GetAttempts";
+import { DeleteQuiz } from "../../APIs/Quizzes/DeleteQuiz";
 import { useToastController, Toaster } from '@fluentui/react-components';
 import { FailToast, SuccessToast } from "../Categories/Categories.styles";
-import { DeleteAttempt } from "../../APIs/Quizes/DeleteAttempt";
-import BackButton from "../BackButton";
+import { DeleteAttempt } from "../../APIs/Quizzes/DeleteAttempt";
 import LoadingSpinner from "../LoadingSpinner";
 import NotFound from "../NotFound";
+import BackContainer from "../BackContainer";
+import { useApi } from "../../hooks/useApi";
 
 
 
@@ -61,31 +62,32 @@ const Category: React.FC = () => {
   const [difficulty, setDifficulty] = React.useState("easy");
   const [questions, setQuestions] = React.useState<QuizQuestion[]>([]);
   const [indexName, setIndexName] = React.useState("");
-    const [availableQuizzes, setAvailableQuizzes] = React.useState<Quiz[]>([]);
-    const [completedQuizzes, setCompletedQuizzes] = React.useState<QuizAttempt[]>([]);
-   const { dispatchToast } = useToastController();
-   const [notFound , setNotFound]= React.useState(false)
- 
-    React.useEffect(() => {
+  const [availableQuizzes, setAvailableQuizzes] = React.useState<Quiz[]>([]);
+  const [completedQuizzes, setCompletedQuizzes] = React.useState<QuizAttempt[]>([]);
+  const { dispatchToast } = useToastController();
+  const [notFound, setNotFound] = React.useState(false)
+  const apiFetch = useApi()
+
+  React.useEffect(() => {
     if (!id) return;
     const fetchData = async () => {
-  try {
-    const result = await GetCategoryById(parseInt(id), setCategoryName);
-    if (!result || result === null) {
-      setNotFound(true);
-      return;
-    }
-    await GetDocumentsByCategory(parseInt(id), setDocuments);
-    await GetQuizesByCategoryId(parseInt(id), setAvailableQuizzes);
-    await GetAttempts(parseInt(id), setCompletedQuizzes);
-  } catch (error) {
-    setNotFound(true); 
-  } finally {
-    setLoading(false);
-  }
-};
+      try {
+        const result = await GetCategoryById(apiFetch, parseInt(id), setCategoryName);
+        if (!result || result === null) {
+          setNotFound(true);
+          return;
+        }
+        await GetDocumentsByCategory(apiFetch, parseInt(id), setDocuments);
+        await GetQuizzesByCategoryId(apiFetch, parseInt(id), setAvailableQuizzes);
+        await GetAttempts(apiFetch, parseInt(id), setCompletedQuizzes);
+      } catch (error) {
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
-    
+
   }, [id]);
   function handleClick() {
     if (inputRef.current) {
@@ -94,30 +96,33 @@ const Category: React.FC = () => {
   }
   async function handleAddDocument(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if(file){
-    setLoadingDialog(true);
-    try{
-      await UploadDocuments(parseInt(id as string), file)
-      dispatchToast(
-        <SuccessToast>Document uploaded successfully!</SuccessToast>,
-        { position: 'bottom-end',
-          intent: 'success'
-         }
-      );
-    }catch (error) {
-      dispatchToast(
-        <FailToast>Failed to upload document</FailToast>,
-        { position: 'bottom-end',
-          intent: 'error'
-         }
-      );
-    }finally {
-      setLoadingDialog(false);}
-    setLoading(true);
-    await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
-      setLoading(false);
-    });
-  }
+    if (file) {
+      setLoadingDialog(true);
+      try {
+        await UploadDocuments(parseInt(id as string), file)
+        dispatchToast(
+          <SuccessToast>Document uploaded successfully!</SuccessToast>,
+          {
+            position: 'bottom-end',
+            intent: 'success'
+          }
+        );
+      } catch (error) {
+        dispatchToast(
+          <FailToast>Failed to upload document</FailToast>,
+          {
+            position: 'bottom-end',
+            intent: 'error'
+          }
+        );
+      } finally {
+        setLoadingDialog(false);
+      }
+      setLoading(true);
+      await GetDocumentsByCategory(apiFetch, parseInt(id as string), setDocuments).finally(() => {
+        setLoading(false);
+      });
+    }
   }
   function handleOpenGenerateQuizDialog() {
     setIsOpenGenerateDialog(true);
@@ -126,7 +131,7 @@ const Category: React.FC = () => {
     setIsOpenGenerateDialog(false);
     setIsGeneratingQuiz(true);
     // Simulate API call to generate quiz
-    await GenerateQuiz(parseInt(id as string), quizName, difficulty, setQuestions, setIndexName)
+    await GenerateQuiz(apiFetch, parseInt(id as string), quizName, difficulty, setQuestions, setIndexName)
       .then(() => {
         setIsGeneratingQuiz(false);
         setIsGeneratedQuiz(true);
@@ -139,117 +144,124 @@ const Category: React.FC = () => {
   async function handleDeleteDocument(documentId: number) {
     setConfirmDelete(false);
     setLoadingDialog(true);
-    try{
-    await DeleteDocument(documentId)
-     dispatchToast(
-          <SuccessToast>Document Deleted successfully!</SuccessToast>,
-          { position: 'bottom-end',
-            intent: 'success',
-           }
-        );
-
-    }catch (error) {
+    try {
+      await DeleteDocument(apiFetch, documentId)
       dispatchToast(
-          <FailToast>Failed to delete category</FailToast>,
-          { position: 'bottom-end',
-            intent: 'error'
-           }
-        );
+        <SuccessToast>Document Deleted successfully!</SuccessToast>,
+        {
+          position: 'bottom-end',
+          intent: 'success',
+        }
+      );
+
+    } catch (error) {
+      dispatchToast(
+        <FailToast>Failed to delete category</FailToast>,
+        {
+          position: 'bottom-end',
+          intent: 'error'
+        }
+      );
 
     }
     finally {
       setLoadingDialog(false);
     }
     setLoading(true);
-    await GetDocumentsByCategory(parseInt(id as string), setDocuments).finally(() => {
+    await GetDocumentsByCategory(apiFetch, parseInt(id as string), setDocuments).finally(() => {
       setLoading(false);
     });
   }
-  function handleStartQuiz(quizId:number){
-    navigate(`/categories/${id}/quizzes/${quizId}`,{
-      state:{
-        state:'start'
+  function handleStartQuiz(quizId: number) {
+    navigate(`/categories/${id}/quizzes/${quizId}`, {
+      state: {
+        state: 'start'
       }
     })
 
   }
-  function handleViewQuiz(quizId:number){
-    navigate(`/categories/${id}/quizzes/${quizId}`,{
-      state:{
-        state:'view'
+  function handleViewQuiz(quizId: number) {
+    navigate(`/categories/${id}/quizzes/${quizId}`, {
+      state: {
+        state: 'view'
       }
-    }) 
+    })
   }
-  async function handleDeleteQuiz(quizId:number){
+  async function handleDeleteQuiz(quizId: number) {
     setLoadingDialog(true)
-    try{
-      await DeleteQuiz(quizId)
+    try {
+      await DeleteQuiz(apiFetch, quizId)
       dispatchToast(
         <SuccessToast>Quiz Deleted successfully!</SuccessToast>,
-        { position: 'bottom-end',
+        {
+          position: 'bottom-end',
           intent: 'success',
-         }
+        }
       );
     }
     catch (error) {
       dispatchToast(
         <FailToast>Failed to delete quiz</FailToast>,
-        { position: 'bottom-end',
+        {
+          position: 'bottom-end',
           intent: 'error'
-         }
+        }
       );
-    }finally {
-      setLoadingDialog(false);  
+    } finally {
+      setLoadingDialog(false);
     }
     if (!id) return;
     setLoadingDialog(true)
-    await GetQuizesByCategoryId(parseInt(id),setAvailableQuizzes)
-    .finally(() => {
-      setLoadingDialog(false);
-    })
+    await GetQuizzesByCategoryId(apiFetch, parseInt(id), setAvailableQuizzes)
+      .finally(() => {
+        setLoadingDialog(false);
+      })
 
   }
-  function handleViewAttempt(categoryId:number,attemptId:number){
+  function handleViewAttempt(categoryId: number, attemptId: number) {
     navigate(`/categories/${categoryId}/attempts/${attemptId}`)
   }
-  function handleDeleteAttempt(attemptId:number){
-    setLoadingDialog(true)  
-    DeleteAttempt(attemptId)
+  function handleDeleteAttempt(attemptId: number) {
+    setLoadingDialog(true)
+    DeleteAttempt(apiFetch, attemptId)
       .then(() => {
         dispatchToast(
           <SuccessToast>Attempt Deleted successfully!</SuccessToast>,
-          { position: 'bottom-end',
+          {
+            position: 'bottom-end',
             intent: 'success',
-           }
+          }
         );
       })
       .catch(() => {
         dispatchToast(
           <FailToast>Failed to delete attempt</FailToast>,
-          { position: 'bottom-end',
+          {
+            position: 'bottom-end',
             intent: 'error'
-           }
+          }
         );
       })
       .finally(() => {
         setLoadingDialog(false);
         if (!id) return;
         setLoadingDialog(true)
-        GetAttempts(parseInt(id),setCompletedQuizzes)
-        .finally(() => {
-          setLoadingDialog(false);
-        })
+        GetAttempts(apiFetch, parseInt(id), setCompletedQuizzes)
+          .finally(() => {
+            setLoadingDialog(false);
+          })
       });
   }
 
-  if(notFound){
+  if (notFound) {
     return <NotFound />
   }
   if (!categoryName) return <LoadingSpinner label="Loading category..." />;
 
   return (
     <PageWrapper>
-      <BackButton />
+      <BackContainer to={'/categories'} />
+
       {isGeneratingQuiz || isGeneratedQuiz ? (
         <Container>
           <Card>
@@ -262,7 +274,7 @@ const Category: React.FC = () => {
               {isGeneratingQuiz ? "Generating your quiz..." : "The quiz is ready!"}
               {isGeneratingQuiz && <Spinner style={{ marginLeft: '10px' }} size={SpinnerSize.small} />}
               {
-                isGeneratingQuiz && "may take a few seconds" 
+                isGeneratingQuiz && "may take a few seconds"
               }
             </Text>
             {isGeneratedQuiz && (
@@ -451,7 +463,7 @@ const Category: React.FC = () => {
                           title="View Quiz"
                           appearance="primary"
                           icon={<Eye20Regular />}
-                          onClick={() => handleViewAttempt(doc.category_id,doc.id)}
+                          onClick={() => handleViewAttempt(doc.category_id, doc.id)}
                         />
 
                         <DeleteButton
@@ -476,6 +488,19 @@ const Category: React.FC = () => {
       {confirmDelete && selectedDocumentId && <ConfirmDeleteDialog documentId={selectedDocumentId} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} onDeleteDocument={handleDeleteDocument} />}
 
       <Toaster />
+      {isGeneratingQuiz && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+        </div>
+      )}
     </PageWrapper>
   );
 };

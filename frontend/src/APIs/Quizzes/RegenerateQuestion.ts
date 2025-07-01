@@ -1,8 +1,8 @@
 import { QuizQuestion } from "../../components/QuizGenerator/data/quiz";
 
-export const RegenerateQuestion = async (name:string, level:string, reason:string, questionNumber:number, questions:QuizQuestion[]) => {
+export const RegenerateQuestion = async (apiFetch: ReturnType<typeof import("../../hooks/useApi").useApi>, name: string, level: string, reason: string, questionNumber: number, questions: QuizQuestion[]) => {
     try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/quizzes/questions/regenerate`, {
+        const response = await apiFetch(`${process.env.REACT_APP_API_URL}/quizzes/questions/regenerate`, {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
@@ -16,15 +16,18 @@ export const RegenerateQuestion = async (name:string, level:string, reason:strin
                 questions: questions
             }),
         });
-
-        if (!response.ok) {
+        if(response){
+              if (!response?.ok) {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        console.log(data);
         return data;
+
+        }
+
+      
     } catch (error) {
-        console.error('Error during regenerate Question:', error);
+        console.error('Error during regenerate question:', error);
         throw error;
     }
 }

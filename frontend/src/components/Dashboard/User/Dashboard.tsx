@@ -18,6 +18,7 @@ import LoadingSpinner from "../../LoadingSpinner";
 import { Content, Root } from "./Dashboard.styles";
 import DashboardNav from "./DashboardNav";
 import DashboardContent from "./DashboardContent";
+import { useApi } from "../../../hooks/useApi";
 
 
 
@@ -29,11 +30,12 @@ export const Basic = (props: Partial<NavDrawerProps>) => {
   const [enabledLinks, setEnabledLinks] = React.useState(true);
   const [type, setType] = React.useState<DrawerType>("inline");
   const [isMultiple, setIsMultiple] = React.useState(true);
-  const[categories,setCategories] = React.useState<Category[]>([]);
-  const [quizzes,setQuizzes] = React.useState<Quiz[]>([]);
-  const[documents,setDocuments] = React.useState<Document[]>([]);
-const[attempts,setAttempts] = React.useState<QuizAttempt[]>([]);
-const[userName,setUserName] = React.useState<string>("");
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [quizzes, setQuizzes] = React.useState<Quiz[]>([]);
+  const [documents, setDocuments] = React.useState<Document[]>([]);
+  const [attempts, setAttempts] = React.useState<QuizAttempt[]>([]);
+  const [userName, setUserName] = React.useState<string>("");
+  const apiFetch = useApi()
 
   const restoreFocusTargetAttributes = useRestoreFocusTarget();
 
@@ -42,7 +44,7 @@ const[userName,setUserName] = React.useState<string>("");
   React.useEffect(() => {
     const fetchDetails = async () => {
       try {
-        await GetUserDetails(setUserName,setCategories, setDocuments, setQuizzes,setAttempts);
+        await GetUserDetails(apiFetch, setUserName, setCategories, setDocuments, setQuizzes, setAttempts);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -50,37 +52,37 @@ const[userName,setUserName] = React.useState<string>("");
     fetchDetails();
   }, []);
 
-  if(!userName) {
-    return <LoadingSpinner label="Loading user details..."/>;  
+  if (!userName) {
+    return <LoadingSpinner label="Loading user details..." />;
   }
 
   return (
     <Root>
-      <DashboardNav  
-      isOpen={isOpen}
-      setIsOpen={setIsOpen}
-      type={type}
-      isMultiple={isMultiple}
-      userName={userName}
-      linkDestination={linkDestination}/>
+      <DashboardNav
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        type={type}
+        isMultiple={isMultiple}
+        userName={userName}
+        linkDestination={linkDestination} />
       <Content>
-  <Tooltip content="Toggle navigation pane" relationship="label">
-    <Hamburger
-      onClick={() => setIsOpen(!isOpen)}
-      {...restoreFocusTargetAttributes}
-    />
-  </Tooltip>
+        <Tooltip content="Toggle navigation pane" relationship="label">
+          <Hamburger
+            onClick={() => setIsOpen(!isOpen)}
+            {...restoreFocusTargetAttributes}
+          />
+        </Tooltip>
 
-  <DashboardContent  
-   userName={userName}
-  categoriesCount={categories.length}
-  documentsCount={documents.length}
-  quizzesCount={quizzes.length}
-  attemptsCount={attempts.length}
-  />
+        <DashboardContent
+          userName={userName}
+          categoriesList={categories}
+          documentsList={documents}
+          quizzesList={quizzes}
+          attemptsList={attempts}
+        />
 
 
-</Content>
+      </Content>
 
     </Root>
   );

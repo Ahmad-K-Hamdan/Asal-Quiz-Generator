@@ -10,14 +10,16 @@ import {
 } from "@fluentui/react-icons";
 import RegenerateQuestionDialog from './RegenerateQuestionDialog';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { RegenerateQuestion } from '../../APIs/Quizes/RegenerateQuestion';
+import { RegenerateQuestion } from '../../APIs/Quizzes/RegenerateQuestion';
 import LoadingDialog from '../Category/LoadingDialog';
-import { SaveQuiz } from '../../APIs/Quizes/SaveQuiz';
-import { StartQuiz } from '../../APIs/Quizes/StartQuiz';
-import { SubmitQuizAttempt } from '../../APIs/Quizes/SubmitQuizAttempt';
+import { SaveQuiz } from '../../APIs/Quizzes/SaveQuiz';
+import { StartQuiz } from '../../APIs/Quizzes/StartQuiz';
+import { SubmitQuizAttempt } from '../../APIs/Quizzes/SubmitQuizAttempt';
 import { useToastController, Toaster } from '@fluentui/react-components';
 import { FailToast, SuccessToast } from '../Categories/Categories.styles';
-import BackButton from '../BackButton';
+import BackContainer from '../BackContainer';
+import { useApi } from '../../hooks/useApi';
+
 
  export function handleChooseAnswerForMultipleChoice(answerNumber: number) {
     if (answerNumber === 1) {
@@ -32,9 +34,9 @@ import BackButton from '../BackButton';
   }
   
 const Quiz = () => {
-  const {id} = useParams<{id: string}>();
+  const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const {questions, quizName, difficulty, indexName } = location.state || {};
+  const { questions, quizName, difficulty, indexName } = location.state || {};
 
   const [quiz, setQuiz] = useState<QuizQuestion[]>(questions)
 
@@ -59,8 +61,9 @@ const Quiz = () => {
   const [regenerateQuestion, setRegenerateQuestion] = useState<number>();
   const [regenerateReason, setRegenerateReason] = useState<string>('');
   const [loadingDialog, setLoadingDialog] = useState(false);
-const navigate = useNavigate();
-   const { dispatchToast } = useToastController();
+  const apiFetch = useApi()
+  const navigate = useNavigate();
+  const { dispatchToast } = useToastController();
 
 
   function handleShowAnswer(questionNumber: number) {
@@ -75,21 +78,21 @@ const navigate = useNavigate();
 
   }
   async function handleFinishAttempt() {
-     if (Object.keys(selectedAnswers).length !== quiz.length) {
+    if (Object.keys(selectedAnswers).length !== quiz.length) {
       setIsRequired('Please answer all questions before finishing the quiz.');
       return;
     }
     setIsRequired('');
     setLoadingDialog(true);
     const answers = quiz.map((question) => {
-      return{
-        ...question, 
+      return {
+        ...question,
         user_answer: selectedAnswers[question.question_number] || '',
       }
     });
     if (!id) return;
-    await SubmitQuizAttempt(parseInt(id),answers)
-    .finally(() => setLoadingDialog(false));
+    await SubmitQuizAttempt(apiFetch, parseInt(id), answers)
+      .finally(() => setLoadingDialog(false));
     setIsFinish(true);
     const correctAnswers = quiz.map((question) => {
       if (question.type === 'multiple_choice' && question.correct_answer === selectedAnswers[question.question_number])
@@ -102,30 +105,30 @@ const navigate = useNavigate();
   }
   function handleStartQuiz() {
     setLoadingDialog(true);
-    StartQuiz(indexName).finally(() => {
-      setLoadingDialog(false);  
+    StartQuiz(apiFetch, indexName).finally(() => {
+      setLoadingDialog(false);
     });
     setIsStart(true)
   }
   async function handleSaveQuiz() {
-     if (!id) {
-    alert("Quiz category ID is missing.");
-    return;
+    if (!id) {
+      alert("Quiz category ID is missing.");
+      return;
     }
     setLoadingDialog(true);
-    try{
-      await SaveQuiz(parseInt(id), quizName, difficulty, indexName, quiz)
+    try {
+      await SaveQuiz(apiFetch, parseInt(id), quizName, difficulty, indexName, quiz)
       dispatchToast(
         <SuccessToast>Quiz saved successfully!</SuccessToast>,
         { position: 'bottom-end', intent: 'success' }
       );
-     navigate(`/categories/${id}`) ;
-    }catch (error) {
+      navigate(`/categories/${id}`);
+    } catch (error) {
       dispatchToast(
         <FailToast>Failed to save quiz</FailToast>,
         { position: 'bottom-end', intent: 'error' }
       );
-    }finally {
+    } finally {
       setLoadingDialog(false);
     }
 
@@ -141,48 +144,48 @@ const navigate = useNavigate();
     setOpenRegenerateDialog(true);
   }
   async function handleRegenerateQuestion() {
-    if(regenerateQuestion){
-    try {
-      setOpenRegenerateDialog(false);
-      setRegenerateReason('');
-      setLoadingDialog(true)
-      const newQuestion = await RegenerateQuestion(indexName, difficulty, regenerateReason, regenerateQuestion, quiz).finally(() => setLoadingDialog(false));
+    if (regenerateQuestion) {
+      try {
+        setOpenRegenerateDialog(false);
+        setRegenerateReason('');
+        setLoadingDialog(true)
+        const newQuestion = await RegenerateQuestion(apiFetch, indexName, difficulty, regenerateReason, regenerateQuestion, quiz).finally(() => setLoadingDialog(false));
 
-      setQuiz(prevQuiz =>
-        prevQuiz.map(q =>
-          q.question_number === regenerateQuestion ? {
-            question_number: newQuestion.question_number + 1,
-            question: newQuestion.question,
-            type: newQuestion.type,
-            choices: newQuestion.choices,
-            correct_answer: newQuestion.correct_answer,
-            explanation: newQuestion.explanation
-          } : q
-        )
-      );
+        setQuiz(prevQuiz =>
+          prevQuiz.map(q =>
+            q.question_number === regenerateQuestion ? {
+              question_number: newQuestion.question_number + 1,
+              question: newQuestion.question,
+              type: newQuestion.type,
+              choices: newQuestion.choices,
+              correct_answer: newQuestion.correct_answer,
+              explanation: newQuestion.explanation
+            } : q
+          )
+        );
 
 
+      }
+      catch (error) {
+        console.error('Error regenerating question:', error);
+        alert('Failed to regenerate question. Please try again.');
+      }
     }
-    catch (error) {
-      console.error('Error regenerating question:', error);
-      alert('Failed to regenerate question. Please try again.');
-    }
-  }
 
   }
   function handleGoToQuizes() {
     navigate(`/categories/${id}`);
   }
   const checkForDisable = Object.values(selectedAnswers).every(answer => answer !== '');
- 
+
   return (
     <QuizContainer>
-      <BackButton />
+      <BackContainer />
 
       <Title>{quizName}</Title>
-     
+
       {!isFinish ? (quiz.map((question) => (
-        <Container  key={question.question_number}className='question-container'>
+        <Container key={question.question_number} className='question-container'>
           <Question className='question'>{question.question_number}.{question.question}</Question>
           {!isStart ? (question.type === 'multiple_choice' && question.choices ? <ul className='choices'>
             {question.choices.map((choice) => (
@@ -225,8 +228,8 @@ const navigate = useNavigate();
             value={selectedAnswers[question.question_number]}
             disabled
           >
-            {question.choices.map((choice,index) => (
-              <Radio style={{ backgroundColor: handleChooseAnswerForMultipleChoice(index + 1) === question.correct_answer ? '#e6ffed' : handleChooseAnswerForMultipleChoice(index + 1)  === selectedAnswers[question.question_number] ? '#ffe6e6' : '' }} key={choice} value={handleChooseAnswerForMultipleChoice(index+1)} label={choice} />
+            {question.choices.map((choice, index) => (
+              <Radio style={{ backgroundColor: handleChooseAnswerForMultipleChoice(index + 1) === question.correct_answer ? '#e6ffed' : handleChooseAnswerForMultipleChoice(index + 1) === selectedAnswers[question.question_number] ? '#ffe6e6' : '' }} key={choice} value={handleChooseAnswerForMultipleChoice(index + 1)} label={choice} />
             ))}
           </RadioGroup> : <Input type='text' value={selectedAnswers[question.question_number] || ''} readOnly />}
 
@@ -236,16 +239,18 @@ const navigate = useNavigate();
       )))}
       {isRequired && <Text color="red">{isRequired}</Text>}
 
-      {!isFinish ? (!isStart ? 
-      <><Btn onClick={handleSaveQuiz}>Save  Quiz</Btn> 
-      <Btn onClick={handleStartQuiz}>Start  Quiz</Btn></>
-       : <Btn disabled={!checkForDisable} onClick={handleFinishAttempt}>Finish Attempt</Btn>) : <Btn onClick={handleGoToQuizes}>Go To Quizes</Btn>}
-      
+      {!isFinish ? (!isStart ?
+        <><Btn onClick={handleSaveQuiz}>Save  Quiz</Btn>
+          <Btn onClick={handleStartQuiz}>Start  Quiz</Btn></>
+        : <Btn disabled={!checkForDisable} onClick={handleFinishAttempt}>Finish Attempt</Btn>) : <Btn onClick={handleGoToQuizes}>Go To Quizes</Btn>}
+
 
       {openRegenerateDialog && regenerateQuestion && <RegenerateQuestionDialog openRegenerateDialog={openRegenerateDialog} setOpenRegenerateDialog={setOpenRegenerateDialog} questionNumber={regenerateQuestion} regenerateReason={regenerateReason} setRegenerateReason={setRegenerateReason} onRegenerate={handleRegenerateQuestion} />}
 
       {loadingDialog && <LoadingDialog loadingDialog={loadingDialog} />}
       
+
+      <Toaster />
 
       <Toaster />
 

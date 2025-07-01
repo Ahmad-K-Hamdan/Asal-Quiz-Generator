@@ -15,14 +15,6 @@ export const Content = styled.div`
     padding: 16px;
     `;
 
-//     export const WelcomeHeading = styled.div`
-//   margin-top: 16px;
-// `;
-
-// export const SubText = styled.div`
-//   margin-top: 4px;
-// `;
-
 export const ContentContainer = styled.div`
   flex: 1;
   padding: 16px;
@@ -39,4 +31,12 @@ export const StatCard = styled(Card)`
   min-width: 150px;
   padding: 16px;
   text-align: center;
+<<<<<<< HEAD
+  cursor: pointer;
+
+&:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }  }
+=======
+>>>>>>> 709ca58952fdb6a7f9d888c627856693f9cb817e
 `;

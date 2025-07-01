@@ -1,21 +1,25 @@
 import * as React from 'react';
 import { Text } from '@fluentui/react-components';
-import { ContentContainer, StatContainer,StatCard  } from './Dashboard.styles';
+import { ContentContainer, StatContainer } from './Dashboard.styles';
+import Card from './Card';
+import { Category } from '../../Categories/Categories';
+import { Document } from '../../Category/Category';
+import { Quiz, QuizAttempt } from '../../QuizGenerator/data/quiz';
 
 
 
 const DashboardContent = ({
   userName,
-  categoriesCount,
-  documentsCount,
-  quizzesCount,
-  attemptsCount,
+  categoriesList,
+  documentsList,
+  quizzesList,
+  attemptsList,
 }: {
   userName: string;
-  categoriesCount: number;
-  documentsCount: number;
-  quizzesCount: number;
-  attemptsCount: number;
+  categoriesList: Category[];
+  documentsList: Document[];
+  quizzesList: Quiz[];
+  attemptsList: QuizAttempt[];
 }) => {
   return (
     <ContentContainer>
@@ -23,22 +27,10 @@ const DashboardContent = ({
       <Text size={400} block>Here’s a quick overview of your dashboard.</Text>
 
       <StatContainer>
-        <StatCard>
-          <Text weight="semibold">Categories</Text>
-          <Text>{categoriesCount}</Text>
-        </StatCard>
-        <StatCard>
-          <Text weight="semibold">Documents</Text>
-          <Text>{documentsCount}</Text>
-        </StatCard>
-        <StatCard>
-          <Text weight="semibold">Quizzes</Text>
-          <Text>{quizzesCount}</Text>
-        </StatCard>
-        <StatCard>
-          <Text weight="semibold">Attempts</Text>
-          <Text>{attemptsCount}</Text>
-        </StatCard>
+        <Card url='/categories' list={categoriesList} title='Categories' />
+        <Card url='/documents' list={documentsList} title='Documents' />
+        <Card url='/quizzes' list={quizzesList} title='Quizzes' />
+        <Card url='/attempts' list={attemptsList} title='Attempts' />
       </StatContainer>
     </ContentContainer>
   );

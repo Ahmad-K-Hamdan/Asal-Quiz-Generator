@@ -11,7 +11,7 @@ root.render(
   <React.StrictMode>
     <FluentProvider theme={webLightTheme}>
       <TokenProvider>
-      <App />
+        <App />
       </TokenProvider>
     </FluentProvider>
   </React.StrictMode>

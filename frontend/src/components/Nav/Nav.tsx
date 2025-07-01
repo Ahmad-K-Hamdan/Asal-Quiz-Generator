@@ -2,13 +2,13 @@
 import { useContext } from 'react';
 import { TokenContext } from '../../context/TokenContext';
 import NavAuth from './NavAuth';
-import NavQuest from './NavQuest';
+import NavGuest from './NavGuest';
 
 function Nav() {
-  const {token} = useContext(TokenContext);
+  const { token } = useContext(TokenContext);
   return (
-    token ? <NavAuth /> : <NavQuest />
-   
+    token ? <NavAuth /> : <NavGuest />
+
   );
 }
 
